@@ -9,7 +9,6 @@ body {
 
 h2 {
     font-size: 4.375rem;
-    font-family: 'Lilita One', cursive;
     color: white;
 }
 
@@ -21,8 +20,28 @@ h2 {
     border-radius: 5%;
 }
 
-#paragraph {
-    display: block;
+#text-area, #footer, h2 {
     font-family: 'Lilita One', cursive;
+    display: block;
+}
+
+#text-area {
     font-size: 4rem;
+}
+
+#footer {
+    margin-top: 1.25rem;
+    font-size: 1.25rem;
+    color: white;
+}
+
+@media (max-width: 570px) {
+
+    #calculator-container {
+        width: 100%;
+    }
+    
+    #footer {
+        margin-top: 3rem;
+    }
 }
