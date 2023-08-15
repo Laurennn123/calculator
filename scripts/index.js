@@ -28,7 +28,7 @@ function calculatorButtons(clickedButton) {
             click = false;
         }
     } else if(operators.includes(clickedButton)) {
-        calculator(clickedButton);
+        calculatorOperator(clickedButton);
     } else if($("#text-area").text() != 0) {
         selectedOperatorAppear(clickedButton);
         let data = $("#text-area").text();
@@ -61,19 +61,19 @@ function indexZero (clickedButton) {
     storedNumber[index] = clickedButton;
 }
 
-function calculator(operator) {
+function calculatorOperator(operator) {
     switch (operator) {
         case '+':
-            add(operator);
+            operatorOperation(operator);
             break;
         case '-':
-            minus(operator);
+            operatorOperation(operator);
             break;
         case '×':
-            multiply(operator);
+            operatorOperation(operator);
             break;
         case '÷':
-            divide(operator);
+            operatorOperation(operator);
             break;
         case 'CE':
             reset();
@@ -84,22 +84,6 @@ function calculator(operator) {
         default:
             break;
     }
-}
-
-function add(plusButton) {
-    operatorOperation(plusButton);
-}
-
-function minus(minusButton) {
-    operatorOperation(minusButton);
-}
-
-function multiply(multiplyButton) {
-    operatorOperation(multiplyButton);
-}
-
-function divide(divideButton) {
-    operatorOperation(divideButton);
 }
 
 function reset() {
@@ -137,17 +121,43 @@ function operatorOperation(operatorButton) {
 
 function total() {
     let total = 0;
+    let storeMultiple = []//
 
     if(storedOperators.includes('×') && $("text-area").length >= 2){
         console.log(storedOperators.indexOf('×'));
     }
 
-    for(let i = 0; i < storedNumber.length; i++) {
-        if(i >= 1) {
-            if(storedOperators[i-1] === '+'){
-                total += storedNumber[i];
+    for(let i = 0; i < storedNumber.length; i++) {//2+3x3x2+2  2+3x3+2x3 // length = 5   3x3x3 //3                                   
+        
+        if(i >= 1) { // i = 4   ; total = 22  storeMultiple = [3,9,18]
+            if(storedOperators[i-1] === '+' ){
+                if(storedOperators[i] === '×'){
+                    total = total;
+                    storeMultiple.push(storedNumber[i]);
+                } else {
+                    total += storedNumber[i];
+                }
             } else if(storedOperators[i-1] === '×'){
-                total *= storedNumber[i];
+                storeMultiple.push(storedNumber[i]);//done
+                let firstIndex = storedNumber[i-1] * storedNumber[i];
+                if(storedOperators[i] === '+' && storedOperators[i-2] === '+' && storedOperators[i-1] === '×'){
+                    total += firstIndex;
+                } else {
+                    let storedFirstIndex = 0;//9
+                    if(storedOperators[i-1] === '×' && storedOperators[i-i] === '+'){
+                        storedFirstIndex = 0;
+                        storedFirstIndex = storeMultiple[i-2] * storeMultiple[i-1]
+                        storeMultiple.pop();
+                        storeMultiple.push(storedFirstIndex);
+                        if(storedNumber.length - i === 1){
+                            total += storeMultiple[i-1];
+                        } else if (storedOperators[i] === '+'){
+                            total += storeMultiple[i-1];
+                        }
+                    } else {
+                        total *= storedNumber[i];
+                    }
+                }
             } else if(storedOperators[i-1] === '-'){
                 total -= storedNumber[i];
             } else if(storedOperators[i-1] === '÷') {
