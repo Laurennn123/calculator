@@ -41,7 +41,6 @@ main {
     background: rgb(255 229 229 / 18%);
     border: 1px solid rgba(196, 190, 190, 0.200);
     width: 80px;
-    height: 73px;
 }
 
 .operator {
@@ -52,6 +51,7 @@ main {
 #buttons {
     display: flex;
     flex-wrap: wrap;
+    height: 291px;
 }
 
 #footer {
