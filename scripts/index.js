@@ -1,11 +1,12 @@
 var index = 0;
 var storedMultiple = [];
+var storedDivision = [];
 var storedNumber = [];
 var storedOperators = []
-var indexForEqual = [];
-var newLength;
-var lastLength;
+var newLengthOfTextArea;
+var lastLengthOfTextArea;
 var click = true;
+var equalButtonClick_And_NoOperatorIncludes = false;
 
 for(let i = 0; i < $(".calculatorButtons").length; i++) {
     document.querySelectorAll(".calculatorButtons")[i].addEventListener("click", function() {
@@ -20,46 +21,47 @@ function calculatorButtons(clickedButton) {
 
     if(clickedButton === 0) {
         if($("#text-area").text() >= 1) {
-            selectedOperatorAppear(clickedButton);
-            let data = $("#text-area").text();
-            let previousNumber = data.slice(0, $("#text-area").text().length);
-            storedNumber[index] = parseInt(previousNumber);
+            displayClickedToTextArea(clickedButton);
+            let textArea = $("#text-area").text();
+            let zeroDisplay = textArea.slice(0, $("#text-area").text().length);
+            storedNumber[index] = parseInt(zeroDisplay);
         } else if(click){
-            indexZero(clickedButton);
+            firstNumberDisplay(clickedButton);
             click = false;
         }
     } else if(operators.includes(clickedButton)) {
         calculatorOperator(clickedButton);
     } else if($("#text-area").text() != 0) {
-        selectedOperatorAppear(clickedButton);
+        displayClickedToTextArea(clickedButton);
         let textArea = $("#text-area").text();
 
-        if(newLength > lastLength) {
-            if(indexForEqual.length === 1) {
-                reset(clickedButton);
+        if(newLengthOfTextArea > lastLengthOfTextArea) {
+            if(equalButtonClick_And_NoOperatorIncludes) {
+                reset();
                 $("#text-area").text(clickedButton);
-                let previous = $("#text-area").text();
-                let previousNumber = previous.slice(0, $("#text-area").text().length);
-                storedNumber[index] = parseInt(previousNumber);
+                let newTextArea = $("#text-area").text();
+                let newClickedNumber = newTextArea.slice(0, $("#text-area").text().length);
+                storedNumber[index] = parseInt(newClickedNumber);
+                equalButtonClick_And_NoOperatorIncludes = false;
             } else {
-                let nextNumber = textArea.slice(lastLength + 1, $("#text-area").text().length);
-                storedNumber[index] = parseInt(nextNumber);
+                let getNextNumberAfterOperator = textArea.slice(lastLengthOfTextArea + 1, $("#text-area").text().length);
+                storedNumber[index] = parseInt(getNextNumberAfterOperator);
             }
         } else {
-            let previousNumber = textArea.slice(0, $("#text-area").text().length);
-            storedNumber[index] = parseInt(previousNumber);
+            let getNumberBeforeOperator = textArea.slice(0, $("#text-area").text().length);
+            storedNumber[index] = parseInt(getNumberBeforeOperator);
         }
         click = true;
 
     } else {
-        indexZero(clickedButton);
+        firstNumberDisplay(clickedButton);
         $("#text-area").text(clickedButton);
     }
 };
 
-function indexZero (clickedButton) {
-    clickedButton = parseInt(clickedButton);
-    storedNumber[index] = clickedButton;
+function firstNumberDisplay (numberPicked) {
+    numberPicked = parseInt(numberPicked);
+    storedNumber[index] = numberPicked;
 }
 
 function calculatorOperator(operator) {
@@ -94,10 +96,9 @@ function reset() {
     } 
     storedMultiple = [];
     storedOperators = [];
-    indexForEqual = [];
     storedNumber = [];
-    newLength = undefined;
-    lastLength = undefined;
+    newLengthOfTextArea = undefined;
+    lastLengthOfTextArea = undefined;
     index = 0;
 }
 
@@ -108,9 +109,9 @@ function operatorOperation(operatorButton) {
         if($("#text-area").text() === "0"){
             storedNumber[index] = 0;
         }
-        indexForEqual = [];
+        equalButtonClick_And_NoOperatorIncludes = false;
         sequenceData()
-        selectedOperatorAppear(operatorButton);
+        displayClickedToTextArea(operatorButton);
         click = false;
     } else {
         $("#text-area").text(textArea.replace(textArea.slice(-1), operatorButton));
@@ -130,6 +131,8 @@ function total() {
                 if(storedOperators[i] === '×'){
                     storedMultiple.push(storedNumber[i]);
                     indexForMultiple++;
+                }else if(storedOperators[i] === '÷') {
+                    storedDivision.push(storedNumber[i])
                 }else {
                      total += storedNumber[i];
                 }
@@ -176,7 +179,7 @@ function total() {
                 index = 0;
                 storedNumber[index] = total;
             }
-            indexForEqual.push("=");
+            equalButtonClick_And_NoOperatorIncludes = true;
         } else {
             animation();
         }
@@ -190,12 +193,12 @@ function animation() {
     $("#text-area").fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 }
 
-function selectedOperatorAppear(clickedButton) {
+function displayClickedToTextArea(clickedButton) {
     document.querySelector("#text-area").innerHTML += clickedButton;
 }
 
 function sequenceData() {
     index++;
-    lastLength = $("#text-area").text().length;
-    newLength = $("#text-area").text().length + 1;
+    lastLengthOfTextArea = $("#text-area").text().length;
+    newLengthOfTextArea = $("#text-area").text().length + 1;
 }
