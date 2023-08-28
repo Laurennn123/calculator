@@ -17,6 +17,11 @@ for(let i = 0; i < $(".calculatorButtons").length; i++) {
     });
 };
 
+document.addEventListener("keydown", function(event){
+    calculatorOperator(event.key);
+    console.log(event.key);
+});
+
 function calculatorButtons(clickedButton) {
     let operators = ['+', '-', '×', '÷', '=', 'CE'];
 
@@ -33,6 +38,14 @@ function calculatorButtons(clickedButton) {
     } else if(operators.includes(clickedButton)) {
         calculatorOperator(clickedButton);
     } else if($("#text-area").text() != 0) {
+        let lengthOfTextArea = $("#text-area").text().length;
+        if(lengthOfTextArea === 9){
+            $("#text-area").css("font-size", "3rem");
+        }else if(lengthOfTextArea === 12) {
+            $("#text-area").css("font-size", "2rem");
+        } else if(lengthOfTextArea === 18){
+            $("#text-area").css("font-size", "1.7rem");
+        }
         displayClickedToTextArea(clickedButton);
         let textArea = $("#text-area").text();
 
@@ -67,6 +80,36 @@ function firstNumberDisplay (numberPicked) {
 
 function calculatorOperator(operator) {
     switch (operator) {
+        case '0':
+            calculatorButtons('0');
+            break;
+        case '1':
+            calculatorButtons('1');
+            break;
+        case '2':
+            calculatorButtons('2');
+            break;
+        case '3':
+            calculatorButtons('3');
+            break;
+        case '4':
+            calculatorButtons('4');
+            break;
+        case '5':
+            calculatorButtons('5');
+            break;
+        case '6':
+            calculatorButtons('6');
+            break;
+        case '7':
+            calculatorButtons('7');
+            break;
+        case '8':
+            calculatorButtons('8');
+            break;
+        case '9':
+            calculatorButtons('9');
+            break;
         case '+':
             operatorOperation(operator);
             break;
@@ -76,11 +119,20 @@ function calculatorOperator(operator) {
         case '×':
             operatorOperation(operator);
             break;
+        case '*':
+            operatorOperation('×');
+            break;
+        case '/':
+            operatorOperation('÷');
+            break;
         case '÷':
             operatorOperation(operator);
             break;
         case 'CE':
             reset();
+            break;
+        case 'Enter':
+            total();
             break;    
         case '=':
             total();
@@ -101,6 +153,7 @@ function reset() {
     newLengthOfTextArea = undefined;
     lastLengthOfTextArea = undefined;
     index = 0;
+    $("#text-area").css("font-size", "4rem");
 }
 
 function operatorOperation(operatorButton) {
@@ -137,31 +190,33 @@ function priorityOperator(indexStoredNumber, operator) {
 
 function orderOfOperation(indexOfLoop, indexOfStoredNumber, operator) {//4,2,times
     let newTotal = 0;
+    let afterNextOperator = storedOperators[indexOfLoop-1]; 
+    let nextOperator = storedOperators[indexOfLoop];
     storedNumberProcess.push(storedNumberSelected[indexOfLoop]);
 
-    if(storedOperators[indexOfLoop] === '+' || storedOperators[indexOfLoop] === '-'){
-        if(storedOperators[indexOfLoop-1] === '×'){
+    if(nextOperator === '+' || nextOperator === '-'){
+        if(afterNextOperator === '×'){
             newTotal = priorityOperator(indexOfStoredNumber, operator);
         }else {
             newTotal = storedNumberProcess[indexOfStoredNumber-1] / storedNumberProcess[indexOfStoredNumber];
         }
-    }else if(storedOperators[indexOfLoop] === '×'){
-        if(storedOperators[indexOfLoop-1] === '×' || storedOperators[indexOfLoop-1] === '÷'){
+    }else if(nextOperator === '×'){
+        if(afterNextOperator === '×' || afterNextOperator === '÷'){
             newTotal = priorityOperator(indexOfStoredNumber, operator);
         }
         newTotal = 0;
-    }else if(storedOperators[indexOfLoop] === '÷'){
+    }else if(nextOperator === '÷'){
         newTotal = priorityOperator(indexOfStoredNumber, operator);
         newTotal = 0;
-    }else if(storedOperators[indexOfLoop-1] === '+' || storedOperators[indexOfLoop-1] === '-'){
+    }else if(afterNextOperator === '+' || afterNextOperator === '-'){
         newTotal = priorityOperator(indexOfStoredNumber, operator);
-    }else if(storedOperators[indexOfLoop-1] === '×') {
+    }else if(afterNextOperator === '×') {
         newTotal = priorityOperator(indexOfStoredNumber, operator);
         if(storedNumberProcess.length === 3 && operator === '÷'){
             let divideBeforeMultiply = storedNumberProcess[indexOfStoredNumber] / storedNumberProcess[indexOfStoredNumber-1];
             newTotal = divideBeforeMultiply;
         }
-    }else if(storedOperators[indexOfLoop-1] === '÷'){
+    }else if(afterNextOperator === '÷'){
         let equalOf = storedNumberProcess[indexOfStoredNumber-1] / storedNumberProcess[indexOfStoredNumber];
         newTotal = equalOf;
     }
@@ -195,15 +250,16 @@ function total() {
     let operatorUsedAddOrMinus = false;
     
     for(let i = 0; i < storedNumberSelected.length; i++) {                               
-        if(i >= 1) { 
-            if(storedOperators[i-1] === '+' ){
+        if(i >= 1) {
+            let operator = storedOperators[i-1];  
+            if(operator === '+' ){
                 additionOrSubtraction(i, '+');
                 operatorUsedAddOrMinus = false;
-            } else if(storedOperators[i-1] === '×'){
+            } else if(operator === '×'){
                 multiplicationOrDivision(operatorUsedAddOrMinus, i, indexForStoredNumbers, '×');
-            } else if(storedOperators[i-1] === '÷'){
+            } else if(operator === '÷'){
                 multiplicationOrDivision(operatorUsedAddOrMinus, i, indexForStoredNumbers, '÷');
-            } else if(storedOperators[i-1] === '-') {
+            } else if(operator === '-') {
                 additionOrSubtraction(i, '-');
                 operatorUsedAddOrMinus = true;
             }
