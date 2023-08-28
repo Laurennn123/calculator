@@ -18,30 +18,44 @@
 
         <body>
             <header>
-                <h2>Calculator</h2>
+                <h1>Calculator</h1>
             </header>
 
             <main>
                 <div id="calculator-container">
-                    <span id="text-area">0</span>
-                    <div id="buttons">
-                        <button class="calculatorButtons" id="button1">1</button>
-                        <button class="calculatorButtons" id="button2">2</button>
-                        <button class="calculatorButtons" id="button3">3</button>
-                        <button class="calculatorButtons operator" id="button+">+</button>
-                        <button class="calculatorButtons" id="button4">4</button>
-                        <button class="calculatorButtons" id="button5">5</button>
-                        <button class="calculatorButtons" id="button6">6</button>
-                        <button class="calculatorButtons operator" id="button-">-</button>
-                        <button class="calculatorButtons" id="button7">7</button>
-                        <button class="calculatorButtons" id="button8">8</button>
-                        <button class="calculatorButtons" id="button9">9</button>
-                        <button class="calculatorButtons operator" id="button×">×</button>
-                        <button class="calculatorButtons" id="button0">0</button>
-                        <button class="calculatorButtons" id="buttonCE">CE</button>
-                        <button class="calculatorButtons" id="button=">=</button>
-                        <button class="calculatorButtons operator" id="button÷">÷</button>
-                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th colspan="4"><h2 id="text-area">0</h2></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><button class="calculatorButtons" id="button1">1</button></td>
+                                <td><button class="calculatorButtons" id="button2">2</button></td>
+                                <td><button class="calculatorButtons" id="button3">3</button></td>
+                                <td><button class="calculatorButtons operator" id="button+">+</button></td>
+                            </tr>
+                            <tr>
+                                <td><button class="calculatorButtons" id="button4">4</button></td>
+                                <td><button class="calculatorButtons" id="button5">5</button></td>
+                                <td><button class="calculatorButtons" id="button6">6</button></td>
+                                <td><button class="calculatorButtons operator" id="button-">-</button></td>
+                            </tr>
+                            <tr>
+                                <td><button class="calculatorButtons" id="button7">7</button></td>
+                                <td><button class="calculatorButtons" id="button8">8</button></td>
+                                <td><button class="calculatorButtons" id="button9">9</button></td>
+                                <td><button class="calculatorButtons operator" id="button×">×</button></td>
+                            </tr>
+                            <tr>
+                                <td><button class="calculatorButtons" id="button0">0</button></td>
+                                <td><button class="calculatorButtons" id="buttonCE">CE</button></td>
+                                <td><button class="calculatorButtons" id="button=">=</button></td>
+                                <td><button class="calculatorButtons operator" id="button÷">÷</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </main>
 
