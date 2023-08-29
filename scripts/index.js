@@ -19,11 +19,10 @@ for(let i = 0; i < $(".calculatorButtons").length; i++) {
 
 document.addEventListener("keydown", function(event){
     calculatorOperator(event.key);
-    console.log(event.key);
 });
 
 function calculatorButtons(clickedButton) {
-    let operators = ['+', '-', '×', '÷', '=', 'CE'];
+    let operators = ['+', '-', '×', '÷', '=', 'CE', '⌫'];
 
     if(clickedButton === 0) {
         if($("#text-area").text() >= 1) {
@@ -39,11 +38,11 @@ function calculatorButtons(clickedButton) {
         calculatorOperator(clickedButton);
     } else if($("#text-area").text() != 0) {
         let lengthOfTextArea = $("#text-area").text().length;
-        if(lengthOfTextArea === 9){
+        if(lengthOfTextArea === 12){
             $("#text-area").css("font-size", "3rem");
-        }else if(lengthOfTextArea === 12) {
+        }else if(lengthOfTextArea === 15) {
             $("#text-area").css("font-size", "2rem");
-        } else if(lengthOfTextArea === 18){
+        } else if(lengthOfTextArea === 23){
             $("#text-area").css("font-size", "1.7rem");
         }
         displayClickedToTextArea(clickedButton);
@@ -128,6 +127,12 @@ function calculatorOperator(operator) {
         case '÷':
             operatorOperation(operator);
             break;
+        case 'Backspace':
+            remove();
+            break;
+        case '⌫':
+            remove();
+            break;
         case 'CE':
             reset();
             break;
@@ -140,6 +145,37 @@ function calculatorOperator(operator) {
         default:
             break;
     }
+}
+
+function remove(){
+    let textArea = $("#text-area").text();
+    let lengthOfTextArea = textArea.length;
+    if(lengthOfTextArea >= 2) {
+        document.querySelector("#text-area").innerHTML = textArea.slice(0, lengthOfTextArea-1);
+        let operators = ['+', '-', '×', '÷'];
+        if(operators.includes(textArea.slice(-1))){
+            storedOperators.pop();
+        }else {
+            let numberSelected = storedNumberSelected[index];
+            let intToString = numberSelected.toString();
+            let numberSelectedLength = intToString.length;
+            let stringToInt = intToString.slice(0, numberSelectedLength-1);
+            if(numberSelectedLength === 1){
+                storedNumberSelected.pop();
+                index--;
+            }else {
+                storedNumberSelected.pop();
+                storedNumberSelected[index] = parseInt(stringToInt);
+            }
+        }
+        if(index === 0){
+            index = 0;
+        }
+    } else {
+        $("#text-area").text('0');
+        storedNumberSelected.pop();
+    }
+    lengthOfTextArea--;
 }
 
 function reset() {
@@ -171,7 +207,6 @@ function operatorOperation(operatorButton) {
         $("#text-area").text(textArea.replace(textArea.slice(-1), operatorButton));
     }
     storedOperators[index-1] = operatorButton;
-    console.log(storedOperators[index-1])
 }
 
 function priorityOperator(indexStoredNumber, operator) {
