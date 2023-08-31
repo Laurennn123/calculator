@@ -1,5 +1,6 @@
 var index = 0;
 var indexForStoredNumbers = 0;
+var indexForNewLength = 0;
 var totalEqual = 0;
 var storedNumberSelected = [];
 var storedOperators = [];
@@ -150,26 +151,31 @@ function calculatorOperator(operator) {
 function remove(){
     let textArea = $("#text-area").text();
     let lengthOfTextArea = textArea.length;
+    let operators = ['+', '-', '×', '÷'];
+
     if(lengthOfTextArea >= 2) {
         document.querySelector("#text-area").innerHTML = textArea.slice(0, lengthOfTextArea-1);
-        let operators = ['+', '-', '×', '÷'];
         if(operators.includes(textArea.slice(-1))){
             storedOperators.pop();
+            click = true;
+            index--;
+            if(storedOperators.length === 0){
+                newLengthOfTextArea = undefined;
+                lastLengthOfTextArea = undefined;
+            } else {
+                lastLengthOfTextArea = indexForNewLength;
+            }
         }else {
             let numberSelected = storedNumberSelected[index];
             let intToString = numberSelected.toString();
-            let numberSelectedLength = intToString.length;
-            let stringToInt = intToString.slice(0, numberSelectedLength-1);
-            if(numberSelectedLength === 1){
+            if(intToString.length === 1){
                 storedNumberSelected.pop();
-                index--;
+                click = false;
             }else {
+                let stringToInt = intToString.slice(0, intToString.length-1);
                 storedNumberSelected.pop();
-                storedNumberSelected[index] = parseInt(stringToInt);
+                storedNumberSelected[index] = parseInt(stringToInt);     
             }
-        }
-        if(index === 0){
-            index = 0;
         }
     } else {
         $("#text-area").text('0');
@@ -200,6 +206,7 @@ function operatorOperation(operatorButton) {
             storedNumberSelected[index] = 0;
         }
         equalButtonClick_And_NoOperatorIncludes = false;
+        indexForNewLength = lastLengthOfTextArea;
         sequenceData()
         displayClickedToTextArea(operatorButton);
         click = false;
@@ -225,33 +232,33 @@ function priorityOperator(indexStoredNumber, operator) {
 
 function orderOfOperation(indexOfLoop, indexOfStoredNumber, operator) {//4,2,times
     let newTotal = 0;
-    let afterNextOperator = storedOperators[indexOfLoop-1]; 
+    let beforeNextOperator = storedOperators[indexOfLoop-1]; 
     let nextOperator = storedOperators[indexOfLoop];
     storedNumberProcess.push(storedNumberSelected[indexOfLoop]);
 
     if(nextOperator === '+' || nextOperator === '-'){
-        if(afterNextOperator === '×'){
+        if(beforeNextOperator === '×'){
             newTotal = priorityOperator(indexOfStoredNumber, operator);
         }else {
             newTotal = storedNumberProcess[indexOfStoredNumber-1] / storedNumberProcess[indexOfStoredNumber];
         }
     }else if(nextOperator === '×'){
-        if(afterNextOperator === '×' || afterNextOperator === '÷'){
+        if(beforeNextOperator === '×' || beforeNextOperator === '÷'){
             newTotal = priorityOperator(indexOfStoredNumber, operator);
         }
         newTotal = 0;
     }else if(nextOperator === '÷'){
         newTotal = priorityOperator(indexOfStoredNumber, operator);
         newTotal = 0;
-    }else if(afterNextOperator === '+' || afterNextOperator === '-'){
+    }else if(beforeNextOperator === '+' || beforeNextOperator === '-'){
         newTotal = priorityOperator(indexOfStoredNumber, operator);
-    }else if(afterNextOperator === '×') {
+    }else if(beforeNextOperator === '×') {
         newTotal = priorityOperator(indexOfStoredNumber, operator);
         if(storedNumberProcess.length === 3 && operator === '÷'){
             let divideBeforeMultiply = storedNumberProcess[indexOfStoredNumber] / storedNumberProcess[indexOfStoredNumber-1];
             newTotal = divideBeforeMultiply;
         }
-    }else if(afterNextOperator === '÷'){
+    }else if(beforeNextOperator === '÷'){
         let equalOf = storedNumberProcess[indexOfStoredNumber-1] / storedNumberProcess[indexOfStoredNumber];
         newTotal = equalOf;
     }
@@ -335,7 +342,7 @@ function animation() {
 }
 
 function displayClickedToTextArea(clickedButton) {
-    document.querySelector("#text-area").innerHTML += clickedButton;
+    document.querySelector("#text-area").innerText += clickedButton;
 }
 
 function sequenceData() {
