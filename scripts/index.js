@@ -7,6 +7,10 @@ var storedOperators = [];
 var storedNumberProcess = [];
 var newLengthOfTextArea;
 var lastLengthOfTextArea;
+var lastIndex;
+var lastTextArea = "";
+var lastStoredNumberSelected = [];
+var lastStoredOperator = [];
 var click = true;
 var equalButtonClick_And_NoOperatorIncludes = false;
 
@@ -148,6 +152,20 @@ function calculatorOperator(operator) {
     }
 }
 
+function lastEquation(){
+    $("#text-area").text(lastTextArea);
+    storedNumberSelected.pop();
+    for(let valueOfLastData = 0; valueOfLastData <= lastIndex; valueOfLastData++){
+        storedNumberSelected.push(lastStoredNumberSelected[valueOfLastData]);
+        storedOperators.push(lastStoredOperator[valueOfLastData]);
+    }
+    storedOperators.pop();
+    index = lastIndex;
+    lastStoredOperator = [];
+    lastStoredNumberSelected = [];
+    equalButtonClick_And_NoOperatorIncludes = false;
+}
+
 function remove(){
     let textArea = $("#text-area").text();
     let lengthOfTextArea = textArea.length;
@@ -155,7 +173,10 @@ function remove(){
 
     if(lengthOfTextArea >= 2) {
         document.querySelector("#text-area").innerHTML = textArea.slice(0, lengthOfTextArea-1);
-        if(operators.includes(textArea.slice(-1))){
+        
+        if(equalButtonClick_And_NoOperatorIncludes){
+            lastEquation();
+        }else if(operators.includes(textArea.slice(-1))){
             storedOperators.pop();
             click = true;
             index--;
@@ -177,9 +198,12 @@ function remove(){
                 storedNumberSelected[index] = parseInt(stringToInt);     
             }
         }
+    }else if(equalButtonClick_And_NoOperatorIncludes){
+        lastEquation();
     } else {
         $("#text-area").text('0');
         storedNumberSelected.pop();
+        lastTextArea = "";
     }
     lengthOfTextArea--;
 }
@@ -230,7 +254,7 @@ function priorityOperator(indexStoredNumber, operator) {
     return total;
 }
 
-function orderOfOperation(indexOfLoop, indexOfStoredNumber, operator) {//4,2,times
+function orderOfOperation(indexOfLoop, indexOfStoredNumber, operator) {
     let newTotal = 0;
     let beforeNextOperator = storedOperators[indexOfLoop-1]; 
     let nextOperator = storedOperators[indexOfLoop];
@@ -317,16 +341,17 @@ function total() {
 
     if(click) {
         if(totalEqual != $("#text-area").text()) {
+            collectLastStoredData();
             if(totalEqual.toString().split('.')[1] >= 1){
                 $("#text-area").text(totalEqual.toFixed(2));
             } else {
                 $("#text-area").text(totalEqual);
-                storedOperators = [];
-                storedNumberProcess = [];
-                storedNumberSelected = [];
-                index = 0;
-                storedNumberSelected[index] = totalEqual;
             }
+            storedOperators = [];
+            storedNumberProcess = [];
+            storedNumberSelected = [];
+            index = 0;
+            storedNumberSelected[index] = totalEqual;
             equalButtonClick_And_NoOperatorIncludes = true;
         } else {
             animation();
@@ -335,6 +360,20 @@ function total() {
         animation();
     }
 
+}
+
+function collectLastStoredData() {
+    lastTextArea = $("#text-area").text();
+    if(equalButtonClick_And_NoOperatorIncludes === false){
+        lastStoredOperator = [];
+        lastStoredNumberSelected = [];
+    }
+    for(let operatorsAndNumbers = 0; operatorsAndNumbers <= index; operatorsAndNumbers++){
+        lastStoredNumberSelected.push(storedNumberSelected[operatorsAndNumbers]);
+        lastStoredOperator.push(storedOperators[operatorsAndNumbers]);
+    }
+    lastStoredOperator.pop();
+    lastIndex = index;
 }
 
 function animation() {
