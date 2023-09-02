@@ -47,7 +47,7 @@ function calculatorButtons(clickedButton) {
             $("#text-area").css("font-size", "3rem");
         }else if(lengthOfTextArea === 15) {
             $("#text-area").css("font-size", "2rem");
-        } else if(lengthOfTextArea === 23){
+        }else if(lengthOfTextArea === 23){
             $("#text-area").css("font-size", "1.7rem");
         }
         displayClickedToTextArea(clickedButton);
@@ -184,7 +184,8 @@ function remove(){
                 newLengthOfTextArea = undefined;
                 lastLengthOfTextArea = undefined;
             } else {
-                lastLengthOfTextArea = indexForNewLength;
+                let lastNumberIndex = storedNumberSelected[index];
+                lastLengthOfTextArea -= lastNumberIndex.toString().length+1;
             }
         }else {
             let numberSelected = storedNumberSelected[index];
@@ -223,8 +224,6 @@ function reset() {
 }
 
 function operatorOperation(operatorButton) {
-    let textArea = $("#text-area").text();
-
     if(click) {
         if($("#text-area").text() === "0"){
             storedNumberSelected[index] = 0;
@@ -235,7 +234,8 @@ function operatorOperation(operatorButton) {
         displayClickedToTextArea(operatorButton);
         click = false;
     } else {
-        $("#text-area").text(textArea.replace(textArea.slice(-1), operatorButton));
+        let textArea = $("#text-area").text();
+        $("#text-area").text(textArea.slice(0, textArea.length-1) + operatorButton);
     }
     storedOperators[index-1] = operatorButton;
 }
