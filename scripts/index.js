@@ -12,6 +12,7 @@ var lastTextArea = "";
 var lastStoredNumberSelected = [];
 var lastStoredOperator = [];
 var click = true;
+var dot = true;
 var equalButtonClick_And_NoOperatorIncludes = false;
 
 for(let i = 0; i < $(".calculatorButtons").length; i++) {
@@ -27,7 +28,7 @@ document.addEventListener("keydown", function(event){
 });
 
 function calculatorButtons(clickedButton) {
-    let operators = ['+', '-', '×', '÷', '=', 'CE', '⌫'];
+    let operators = ['+', '-', '×', '÷', '=', 'CE', '⌫', '.'];
 
     if(clickedButton === 0) {
         if($("#text-area").text() >= 1) {
@@ -63,11 +64,11 @@ function calculatorButtons(clickedButton) {
                 equalButtonClick_And_NoOperatorIncludes = false;
             } else {
                 let getNextNumberAfterOperator = textArea.slice(lastLengthOfTextArea + 1, $("#text-area").text().length);
-                storedNumberSelected[index] = parseInt(getNextNumberAfterOperator);
+                storedNumberSelected[index] = parseFloat(getNextNumberAfterOperator);
             }
         } else {
             let getNumberBeforeOperator = textArea.slice(0, $("#text-area").text().length);
-            storedNumberSelected[index] = parseInt(getNumberBeforeOperator);
+            storedNumberSelected[index] = parseFloat(getNumberBeforeOperator);
         }
         click = true;
 
@@ -113,6 +114,21 @@ function calculatorOperator(operator) {
             break;
         case '9':
             calculatorButtons('9');
+            break;
+        case '.':
+            if(dot){
+                let textArea = $("#text-area").text();
+
+                if($("#text-area").text() === "0"){
+                    storedNumberSelected[index] = 0;
+                    $("#text-area").text('.')
+                }else if(!textArea.slice(0, textArea.length).includes('.')){
+                    $("#text-area").text(textArea.slice(0, textArea.length) + operator);
+                }else if(!textArea.slice(lastLengthOfTextArea + 1, textArea.length).includes('.')){
+                    $("#text-area").text(textArea.slice(0, textArea.length) + operator);
+                }
+                dot = false;
+            }
             break;
         case '+':
             operatorOperation(operator);
@@ -190,14 +206,37 @@ function remove(){
         }else {
             let numberSelected = storedNumberSelected[index];
             let intToString = numberSelected.toString();
-            if(intToString.length === 1){
+
+            if(intToString.at(-3) === '.' || intToString.at(-2) === '.'){
+                if(textArea.slice(-1) !== '.'){
+                    if(intToString.slice(-3, -2) === '.'){
+                        storedNumberSelected[index] = parseFloat(intToString.slice(0, -1));
+                    }else if(intToString.slice(-3, -2) != '.'){
+                        if($("#text-area").text() === intToString){
+                            //remain the total with one digit decimal number.
+                        }else {
+                            storedNumberSelected[index] = parseFloat(intToString.slice(0, -1))
+                        }
+                    }else {
+                        storedNumberSelected[index] = parseFloat(intToString.slice(0, -1))
+                    }    
+                }       
+            }else if(textArea.at(-1) === '.'){
+                if(intToString === '0'){
+                    storedNumberSelected.pop();
+                }else {
+                     //remain the total without the decimal number.
+                }
+                dot = true;
+            }else if(intToString.length >= 2){
+                storedNumberSelected.pop();
+                let stringToInt = intToString.slice(0, intToString.length-1);
+                storedNumberSelected[index] = parseFloat(stringToInt);
+            }else {
                 storedNumberSelected.pop();
                 click = false;
-            }else {
-                let stringToInt = intToString.slice(0, intToString.length-1);
-                storedNumberSelected.pop();
-                storedNumberSelected[index] = parseInt(stringToInt);     
             }
+
         }
     }else if(equalButtonClick_And_NoOperatorIncludes){
         lastEquation();
@@ -211,6 +250,7 @@ function remove(){
 
 function reset() {
     click = true;
+    dot = true;
     if(click) {
         $("#text-area").text(0);
     } 
@@ -224,17 +264,23 @@ function reset() {
 }
 
 function operatorOperation(operatorButton) {
+    let textArea = $("#text-area").text();
     if(click) {
         if($("#text-area").text() === "0"){
             storedNumberSelected[index] = 0;
-        }
+        } 
         equalButtonClick_And_NoOperatorIncludes = false;
         indexForNewLength = lastLengthOfTextArea;
         sequenceData()
-        displayClickedToTextArea(operatorButton);
+        let operators = ['+', '-', '×', '÷'];
+        if(!operators.includes(textArea.slice(-1))){
+            displayClickedToTextArea(operatorButton);       
+        }else {
+            $("#text-area").text(textArea.slice(0, textArea.length-1) + operatorButton);
+        }   
         click = false;
+        dot = true;
     } else {
-        let textArea = $("#text-area").text();
         $("#text-area").text(textArea.slice(0, textArea.length-1) + operatorButton);
     }
     storedOperators[index-1] = operatorButton;
@@ -351,7 +397,7 @@ function total() {
             storedNumberProcess = [];
             storedNumberSelected = [];
             index = 0;
-            storedNumberSelected[index] = totalEqual;
+            storedNumberSelected[index] = Math.round(totalEqual*100)/100;
             equalButtonClick_And_NoOperatorIncludes = true;
         } else {
             animation();
