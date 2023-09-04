@@ -55,10 +55,6 @@ table {
     width: 246px;
 }
 
-.equal {
-    width: 164px;
-}
-
 .operator {
     color: white;
     background-image: linear-gradient(#e6b6d0, #e9b0a9, #ecb2b4);
