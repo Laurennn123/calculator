@@ -4,6 +4,7 @@
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Calculator</title>
+            <link rel="icon" href="./images/calculator-icon.png"/>
             <link rel="stylesheet" href="./styles/index.css">
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +27,12 @@
                     <table>
                         <thead>
                             <tr>
-                                <th colspan="5"><h2 id="text-area">0</h2></th>
+                                <th colspan="5">
+                                    <span id="last-total"></span>
+                                    <div id="text-area-container">
+                                        <h2 id="text-area">0</h2>
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -49,7 +55,7 @@
                                 <td><button class="calculatorButtons" id="button8">8</button></td>
                                 <td><button class="calculatorButtons" id="button9">9</button></td>
                                 <td><button class="calculatorButtons" id="buttonDot">.</button></td>
-                                <td><button class="calculatorButtons operator" id="button-">-</button></td>
+                                <td><button class="calculatorButtons operator" id="button-">−</button></td>
                             </tr>
                             <tr>
                                 <td colspan="3"><button class="calculatorButtons" id="button0">0</button></td>
