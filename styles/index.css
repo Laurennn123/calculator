@@ -29,16 +29,31 @@ table {
     background-color: white;
 }
 
-#text-area, #footer, h1 {
+#text-area, #footer, #last-total, h1 {
     font-family: 'Concert One', cursive;
     display: block;
 }
 
-#text-area {
-    font-size: 4rem;
+#last-total, #text-area-container {
+    width: 390px;
+}
+
+#last-total {
+    height: 19px;
+    color: dimgray;
     text-align: right;
     padding-right: 20px;
-    height: 76px;
+}
+
+#text-area-container {
+    height: 57px;
+    overflow: hidden;
+}
+
+#text-area {
+    font-size: 3rem;
+    float: right;
+    display: inline;
 }
 
 .calculatorButtons {
