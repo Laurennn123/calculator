@@ -31,17 +31,7 @@ document.addEventListener("keydown", function(event){
 function calculatorButtons(clickedButton) {
     let operators = ['+', '−', '×', '÷', '=', 'CE', '⌫', '.'];
 
-    if(clickedButton === 0) {
-        if($("#text-area").text() >= 1) {
-            displayClickedToTextArea(clickedButton);
-            let textArea = $("#text-area").text();
-            let zeroDisplay = textArea.slice(0, $("#text-area").text().length);
-            storedNumberSelected[index] = parseFloat(zeroDisplay);
-        } else if(click){
-            firstNumberDisplay(clickedButton);
-            click = false;
-        }
-    } else if(operators.includes(clickedButton)) {
+    if (operators.includes(clickedButton)) {
         calculatorOperator(clickedButton);
     } else if($("#text-area").text() != 0) {
         displayClickedToTextArea(clickedButton);
@@ -66,8 +56,14 @@ function calculatorButtons(clickedButton) {
         click = true;
 
     } else {
-        firstNumberDisplay(clickedButton);
-        $("#text-area").text(clickedButton);
+        let textArea = $("#text-area").text();
+        if(textArea.at(0) === '.' && textArea.at(1) === '0'){
+            displayClickedToTextArea(clickedButton);
+            console.log("right")
+        }else {
+            firstNumberDisplay(clickedButton);
+            $("#text-area").text(clickedButton);
+        }
     }
 };
 
@@ -131,6 +127,9 @@ function calculatorOperator(operator) {
         case '-':
             operatorOperation('−');
             break;
+        case '−':
+            operatorOperation(operator);
+            break;
         case '×':
             operatorOperation(operator);
             break;
@@ -176,6 +175,7 @@ function lastEquation(){
     lastStoredOperator = [];
     lastStoredNumberSelected = [];
     equalButtonClick_And_NoOperatorIncludes = false;
+    remove();
 }
 
 function remove(){
@@ -218,7 +218,11 @@ function remove(){
                 }       
             }else if(textArea.at(-1) === '.' || textArea.at(-1) === '0'){
                 if(intToString === '0'){
-                    storedNumberSelected.pop();
+                    if(textArea.at(0) === '.'){
+                        //remain the 0
+                    }else {
+                        storedNumberSelected.pop();
+                    }
                 }else if(intToString.at(-1) === '0'){ 
                     storedNumberSelected.pop();
                     let stringToInt = intToString.slice(0, intToString.length-1);
@@ -398,11 +402,9 @@ function total() {
     if(click) {
         if(totalEqual != $("#text-area").text()) {
             collectLastStoredData();
-            if(totalEqual.toString().split('.')[1] >= 1){
-                $("#text-area").text(totalEqual.toFixed(2));
-            } else {
-                $("#text-area").text(totalEqual);
-            }
+            //i will implement here a button that selects how many decimal they want.
+            //Math.fround(totalEqual).toFixed(2);
+            $("#text-area").text(totalEqual);
             let lastEquation = [];
             for(let i = 0; i <= index; i++){
                 let data = storedNumberSelected[i];
