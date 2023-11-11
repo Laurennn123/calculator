@@ -66,13 +66,14 @@ table {
     height: 80px;
 }
 
-#button0 {
-    width: 246px;
+.operator {
+    color: black;
+    /* background-image: linear-gradient(#e6b6d0, #e9b0a9, #ecb2b4); */
+    background-color: rgb(251, 234, 234);
 }
 
-.operator {
-    color: white;
-    background-image: linear-gradient(#e6b6d0, #e9b0a9, #ecb2b4);
+.equal {
+    background-color: rgb(253, 216, 216);
 }
 
 #footer {
@@ -81,7 +82,18 @@ table {
 }
 
 @media (max-width: 570px) {
+    #calculator-container {
+        width: 100;
+    }
+
     main {
         margin-bottom: 6rem;
+    }
+    
+}
+
+@media (max-width: 360px) {
+    #text-area-container {
+        width: 79%;
     }
 }
