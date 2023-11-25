@@ -1,25 +1,26 @@
-var index = 0;
-var preveiousIndex;
-var indexForStoredNumbers = 0;
-var indexForNewLength = 0;
-var totalEqual = 0;
-var storedNumberSelected = [];
-var storedOperators = [];
-var storedNumberProcess = [];
-var newLengthOfTextArea;
-var lastLengthOfTextArea;
-var lastIndex;
-var lastTextArea = "";
-var lastStoredNumberSelected = [];
-var lastStoredOperator = [];
-var click = true;
-var dot = true;
-var equalButtonClick_And_NoOperatorIncludes = false;
-var arithmethicOperators = ['+', '−', '÷', '×'];
-var haveParenthesis = false;
-var slicingBeforeCloseParenthesis = 0;
-var indexOfParenthesis = 0;
-var gettingValueStartAtOpenParenthesis;
+let index = 0;
+let preveiousIndex;
+let indexForStoredNumbers = 0;
+let indexForNewLength = 0;
+let totalEqual = 0;
+let storedNumberSelected = [];
+let storedOperators = [];
+let storedNumberProcess = [];
+let newLengthOfTextArea;
+let lastLengthOfTextArea;
+let lastIndex;
+let lastTextArea = "";
+let lastStoredNumberSelected = [];
+let lastStoredOperator = [];
+let click = true;
+let dot = true;
+let equalButtonClick_And_NoOperatorIncludes = false;
+let arithmethicOperators = ['+', '−', '÷', '×'];
+let haveParenthesis = false;
+let slicingBeforeCloseParenthesis = 0;
+let indexOfParenthesis = 0;
+let indexInsideOfParenthesis = 0;
+let gettingValueStartAtOpenParenthesis;
 const firstIndex = 0;
 const openParenthesis = '(';
 const closeParenthesis = ')';
@@ -90,7 +91,7 @@ function calculatorButtons(clickedButton) {
             let startingIndex;
             if (textArea.charAt(lastChar) === closeParenthesis) {
                 if(indexOfParenthesis === 1) {
-                    startingIndex = lastLengthOfTextAreaWithParenthesis
+                    startingIndex = lastLengthOfTextAreaWithParenthesis;
                 } else {
                     startingIndex = gettingValueStartAtOpenParenthesis;
                 }
@@ -176,8 +177,13 @@ function calculatorOperator(operator) {
                 } else {
                     operator = mutilplicationSign;
                 }
-                storedOperators[index] = operator;
-                index++;
+                // to capture the sequence of containing number with operations
+                if (storedNumberSelected.length === 0) {
+                    //nothing will change because of not having number
+                } else {
+                    storedOperators[index] = operator;
+                    index++;
+                }
             }
 
             if ($("#text-area").text() === zero) {
@@ -392,6 +398,7 @@ function reset() {
     index = 0;
     haveParenthesis = false;
     indexOfParenthesis = 0;
+    indexInsideOfParenthesis = 0;
     slicingBeforeCloseParenthesis = 0;
 }
 
@@ -439,12 +446,8 @@ function operatorOperation(operatorButton) {
 }
 
 function priorityOperator(indexStoredNumber, operator) {
-    let total = 0;
-    if (operator === '×') {
-        total = storedNumberProcess[indexStoredNumber-1] * storedNumberProcess[indexStoredNumber];
-    } else {
-        total = storedNumberProcess[indexStoredNumber-1] / storedNumberProcess[indexStoredNumber];
-    }
+    const total = operator === '×' ? storedNumberProcess[indexStoredNumber-1] * storedNumberProcess[indexStoredNumber]:
+    storedNumberProcess[indexStoredNumber-1] / storedNumberProcess[indexStoredNumber];
     storedNumberProcess.pop();
     storedNumberProcess.push(total);
     return total;
@@ -452,43 +455,107 @@ function priorityOperator(indexStoredNumber, operator) {
 
 function orderOfOperation(indexOfLoop, indexOfStoredNumber, operator) {
     let newTotal = 0;
+    let textArea = $("#text-area").text();
     let beforeNextOperator = storedOperators[indexOfLoop-1]; 
     let nextOperator = storedOperators[indexOfLoop];
     storedNumberProcess.push(storedNumberSelected[indexOfLoop]);
 
     if (nextOperator === '+' || nextOperator === '−') {
-        if (beforeNextOperator === '×') {
+        if ( (nextOperator === '+' && textArea.slice(-1) === closeParenthesis) || (nextOperator === '−' && textArea.slice(-1) === closeParenthesis) ) {
+            //added number in store process
+            if (beforeNextOperator === '×' && indexOfLoop !== 1) {
+                indexInsideOfParenthesis++;     
+                newTotal = priorityOperator(indexOfLoop, operator);       
+            }
+        } else if (beforeNextOperator === '×') {
             newTotal = priorityOperator(indexOfStoredNumber, operator);
         } else {
             newTotal = priorityOperator(indexOfStoredNumber, operator);
         }
-    } else if (nextOperator === '×') {
-        if(beforeNextOperator === '×' || beforeNextOperator === '÷') {
-            newTotal = priorityOperator(indexOfStoredNumber, operator);
+    } else if (textArea.slice(-1) === closeParenthesis && (storedNumberSelected.length - indexOfLoop) === 1) {
+        indexInsideOfParenthesis++;
+        // adding all of the number inside of parenthesis
+        let valueOfLastOperation = priorityOperator(indexOfLoop, operator);
+        storedNumberProcess.splice(indexOfParenthesis, indexInsideOfParenthesis);
+        storedNumberProcess.splice(indexOfParenthesis, indexOfParenthesis, totalEqual + valueOfLastOperation);
+        newTotal = priorityOperator(indexOfLoop - indexInsideOfParenthesis, operator) - totalEqual;
+    } else if(textArea.slice(-1) === closeParenthesis && nextOperator === '×') {
+        if (indexOfLoop === 1) {
+            // to not multiplied at the first num after parenthesis
+        } else {
+            indexInsideOfParenthesis++;
+            priorityOperator(indexOfLoop, operator);
         }
-        newTotal = 0;
-    } else if (nextOperator === '÷') {
-        newTotal = priorityOperator(indexOfStoredNumber, operator);
+    } else if (nextOperator === '×' || nextOperator === '÷') {
+        if(beforeNextOperator === '×' || beforeNextOperator === '÷') {
+            priorityOperator(indexOfStoredNumber, operator);
+        }
         newTotal = 0;
     } else if (beforeNextOperator === '+' || beforeNextOperator === '−') {
         newTotal = priorityOperator(indexOfStoredNumber, operator);
-    } else if (beforeNextOperator === '×') {
+    } else if (beforeNextOperator === '×' || beforeNextOperator === '÷') {
         newTotal = priorityOperator(indexOfStoredNumber, operator);
         if(storedNumberProcess.length === 3 && operator === '÷'){
             let divideBeforeMultiply = storedNumberProcess[indexOfStoredNumber] / storedNumberProcess[indexOfStoredNumber-1];
             newTotal = divideBeforeMultiply;
         }
-    } else if (beforeNextOperator === '÷') {
-        let equalOf = priorityOperator(indexOfStoredNumber, operator);
-        newTotal = equalOf;
     }
     return newTotal;
 }
 
-function additionOrSubtraction(indexIteration, operator) {
+function additionSubtractionPerform (indexOfStoredNumber, operator) {
+    let totalValueWithParenthesis;
+    //refactor later like on guidelines
+    if (operator === '+') {
+        totalValueWithParenthesis = storedNumberProcess[indexOfStoredNumber] + storedNumberProcess[indexOfStoredNumber + 1];
+    } else {
+        totalValueWithParenthesis = storedNumberProcess[indexOfStoredNumber] - storedNumberProcess[indexOfStoredNumber + 1];
+    }
+    return totalValueWithParenthesis;
+}
+
+function additionStoreProcess(indexIteration, operator) {
+    storedNumberProcess.push(storedNumberSelected[indexIteration]);
+    let getTotalOfallPlus = additionSubtractionPerform((indexIteration - 1) ,operator);
+    storedNumberProcess.pop();
+    storedNumberProcess.push(getTotalOfallPlus);
+    return getTotalOfallPlus;
+}
+
+function additionOrSubtractionForTotal(indexIteration, operator) {
+    let textArea = $("#text-area").text();
+    let lastTermIndex = storedNumberSelected.length - indexIteration;
     if (storedOperators[indexIteration] === '×' || storedOperators[indexIteration] === '÷') {
         indexForStoredNumbers++;
         storedNumberProcess.push(storedNumberSelected[indexIteration]);
+        indexInsideOfParenthesis++;
+        if (indexIteration === 2) {
+            totalEqual += storedNumberSelected[indexIteration - 1];
+        }
+    } else if (lastTermIndex === 1 && textArea.slice(-1) === closeParenthesis && !storedOperators.includes('×')) {
+        additionStoreProcess(indexIteration, operator);
+        storedOperators.reverse();
+        totalEqual = priorityOperator(indexIteration - (indexInsideOfParenthesis + 1), storedOperators[indexIteration-1]);
+    } else if (lastTermIndex === 1 && textArea.slice(-1) === closeParenthesis && storedOperators.includes('×')) {
+        indexInsideOfParenthesis++;
+        if (storedOperators[indexInsideOfParenthesis - 1] === '×' && indexInsideOfParenthesis !== 1) {
+            storedNumberProcess.splice(indexIteration-1, indexOfParenthesis, totalEqual);
+            totalEqual += additionStoreProcess(indexIteration, operator) - totalEqual;
+        } else {
+            totalEqual += additionStoreProcess(indexIteration, operator) - totalEqual;
+        }
+        storedNumberProcess.splice(indexOfParenthesis, indexInsideOfParenthesis);
+        storedNumberProcess.splice(indexOfParenthesis, indexOfParenthesis, totalEqual);
+        storedOperators.reverse();
+        totalEqual = priorityOperator(indexIteration - indexInsideOfParenthesis, storedOperators[indexIteration - 1]);
+    } else if ( (operator === '+' || operator === '−') && textArea.slice(-1) === closeParenthesis) {
+        indexInsideOfParenthesis++;
+        if (storedOperators[indexInsideOfParenthesis - 1] === '×' && indexInsideOfParenthesis !== 1) {
+            storedNumberProcess.splice(indexIteration-1, indexOfParenthesis, totalEqual);
+            totalEqual += additionStoreProcess(indexIteration, operator) - totalEqual;
+        } else {
+            totalEqual += additionStoreProcess(indexIteration, operator) - totalEqual;
+        }
     } else if (operator === '−') {
         totalEqual -= storedNumberSelected[indexIteration];
     } else if (operator === '+') {
@@ -514,14 +581,14 @@ function total() {
         if(i >= 1) {
             let operator = storedOperators[i-1];  
             if (operator === '+' ) {
-                additionOrSubtraction(i, '+');
+                additionOrSubtractionForTotal(i, '+');
                 operatorUsedAddOrMinus = false;
             } else if (operator === '×') {
                 multiplicationOrDivision(operatorUsedAddOrMinus, i, indexForStoredNumbers, '×');
             } else if (operator === '÷') {
                 multiplicationOrDivision(operatorUsedAddOrMinus, i, indexForStoredNumbers, '÷');
             } else if (operator === '−') {
-                additionOrSubtraction(i, '−');
+                additionOrSubtractionForTotal(i, '−');
                 operatorUsedAddOrMinus = true;
             }
         } else {
