@@ -525,6 +525,9 @@ function orderOfOperation(indexOfLoop, indexOfStoredNumber, operator) {
             indexInSkip = indexOfStoredNumber;
         } else {
             priorityOperator(indexOfStoredNumber, operator);
+            if (!skipOperation) {
+                indexInSkip = 0;
+            }
         }
 
         // beforeNextOperator is the for the last index operation
