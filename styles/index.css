@@ -81,6 +81,10 @@ table {
     color: white;
 }
 
+.close-paren {
+    color: gray;
+}
+
 @media (max-width: 570px) {
     #calculator-container {
         width: 100;

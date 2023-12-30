@@ -26,28 +26,22 @@ let gettingValueStartAtOpenParenthesis;
 const firstIndex = 0;
 const openParenthesis = '(';
 const closeParenthesis = ')';
+const closeParenthesisHTML = '<span class="close-paren">)</span>';
+
+const ANIMATOR_ELEMENTS = {
+    '(': '#buttonOpenParenthesis',
+    '=': '#buttonTotal',
+    ')': '#buttonCloseParenthesis',
+    '.': '#buttonDot',
+    '+': '#buttonPlus',
+};
 
 for (let i = 0; i < $(".calculatorButtons").length; i++) {
     document.querySelectorAll(".calculatorButtons")[i].addEventListener("click", function() {
         let clickedButton = this.textContent;
         calculatorButtons(clickedButton);
-        try {
-            $("#button" + clickedButton).fadeOut(100).fadeIn(100);
-        } catch {
-            switch (clickedButton) {
-                case '(':
-                    $("#buttonOpenParenthesis").fadeOut(100).fadeIn(100);
-                    break;
-                case '=':
-                    $("#buttonTotal").fadeOut(100).fadeIn(100);
-                    break;
-                case ')':
-                    $("#buttonCloseParenthesis").fadeOut(100).fadeIn(100);
-                    break;    
-                default:
-                    break;    
-            }
-        }
+        const idValue = ANIMATOR_ELEMENTS[clickedButton] || `#button${clickedButton}`;
+        $(idValue).fadeOut(100).fadeIn(100);
     });
 };
 
@@ -79,11 +73,8 @@ function calculatorButtons(clickedButton) {
                 storedNumberSelected[index] = parseInt(newClickedNumber);
             } else {
                 let getNextNumberAfterOperator
-                if(textArea.slice(-1) !== closeParenthesis) {
-                    getNextNumberAfterOperator = textArea.slice(lastLengthOfTextArea + 1, $("#text-area").text().length);
-                } else {
-                    getNextNumberAfterOperator = textArea.slice(lastLengthOfTextArea, $("#text-area").text().length);
-                }
+                let counter = (textArea.slice(-1) !== closeParenthesis) ? 1 : 0;
+                getNextNumberAfterOperator = textArea.slice(lastLengthOfTextArea + counter, $("#text-area").text().length);
                 storedNumberSelected[index] = parseFloat(getNextNumberAfterOperator);
             }
         } else {
@@ -124,168 +115,138 @@ function firstNumberDisplay (numberPicked) {
 function produceGreyCloseParenthesis (indexOfOpenAndClose) {
     let totalOfCloseParenthesis = '';
     while (indexOfOpenAndClose > 0) {
-        totalOfCloseParenthesis += closeParenthesis.fontcolor("gray");
+        totalOfCloseParenthesis += closeParenthesisHTML;
         indexOfOpenAndClose--;
     }
     return totalOfCloseParenthesis;
 }
 
-function calculatorOperator(operator) {
-    switch (operator) {
-        case '0':
-            calculatorButtons('0');
-            break;
-        case '1':
-            calculatorButtons('1');
-            break;
-        case '2':
-            calculatorButtons('2');
-            break;
-        case '3':
-            calculatorButtons('3');
-            break;
-        case '4':
-            calculatorButtons('4');
-            break;
-        case '5':
-            calculatorButtons('5');
-            break;
-        case '6':
-            calculatorButtons('6');
-            break;
-        case '7':
-            calculatorButtons('7');
-            break;
-        case '8':
-            calculatorButtons('8');
-            break;
-        case '9':
-            calculatorButtons('9');
-            break;
-        case '(':
-            const mutilplicationSign = '×';
-            let textArea = $("#text-area").text();
-            let lastChar = textArea.slice(-1)
-            let zero = '0';
-            let empty = '';
-            if (lastChar === mutilplicationSign) {  
-                // no changes because of the operator that already initialize as multiplication
-            } else if(textArea.slice(lastLengthOfTextArea, slicingBeforeCloseParenthesis) === empty && lastLengthOfTextArea !== undefined){
-                // no changes due to no value 
-            } else {
-                let operator;
-                if (arithmethicOperators.includes(lastChar)) {
-                    operator = lastChar;
-                } else {
-                    operator = mutilplicationSign;
-                }
-                // to capture the sequence of containing number with operations
-                if (storedNumberSelected.length === 0) {
-                    //nothing will change because of not having number
-                } else {
-                    storedOperators[index] = operator;
-                    index++;
-                }
-            }
+const NUMBER_OPERATORS = ['0', '1','2', '3','4', '5','6', '7','8', '9'];
 
-            if ($("#text-area").text() === zero) {
-                $("#text-area").html(openParenthesis + closeParenthesis.fontcolor("gray"));
-                haveParenthesis = true;
-            } else {
-                let openAndCloseParenthesis = openParenthesis + closeParenthesis.fontcolor("gray");
-                let previousCloseParenthesis = produceGreyCloseParenthesis(indexOfParenthesis);
-                let haveValueAtNewParenthesis = haveParenthesis;
-                if (haveValueAtNewParenthesis) {
-                    $("#text-area").html(textArea.slice(firstIndex, slicingBeforeCloseParenthesis) + (openAndCloseParenthesis + previousCloseParenthesis));
-                    haveValueAtNewParenthesis = false;
+const ADDITION_OPERATORS = ['+'];
+const SUBTRACTION_OPERATORS = ['−', '-'];
+const DIVISION_OPERATORS = ['/', '÷'];
+const MULTIPLICATION_OPERATORS = ['*', '×'];
+const OPERATIONS = [
+    ...ADDITION_OPERATORS,
+    ...SUBTRACTION_OPERATORS,
+    ...DIVISION_OPERATORS,
+    ...MULTIPLICATION_OPERATORS,
+];
+const OPERATIONS_MAP = {
+    '*': '×',
+    '/': '÷',
+    '-': '−',
+};
+const REMOVE_OPERATORS = ['Backspace', '⌫'];
+
+function calculatorOperator(operator) {
+    if (NUMBER_OPERATORS.includes(operator)) {
+        calculatorButtons(operator);
+    } else if (OPERATIONS.includes(operator)) {
+        const mapping = OPERATIONS_MAP[operator] || operator;// tips
+        operatorOperation(mapping);
+    } else if (REMOVE_OPERATORS.includes(operator)) {
+        remove();
+    } else {
+        switch (operator) {
+            case '(':
+                const mutilplicationSign = '×';
+                let textArea = $("#text-area").text();
+                let lastChar = textArea.slice(-1)
+                let zero = '0';
+                let empty = '';
+                if (lastChar === mutilplicationSign) {  
+                    // no changes because of the operator that already initialize as multiplication
+                } else if(textArea.slice(lastLengthOfTextArea, slicingBeforeCloseParenthesis) === empty && lastLengthOfTextArea !== undefined){
+                    // no changes due to no value 
                 } else {
-                    if (indexOfParenthesis === parseInt(zero)) {
-                        $("#text-area").html(textArea.slice(firstIndex) + (openParenthesis + closeParenthesis.fontcolor("gray")));
+                    let operator;
+                    if (arithmethicOperators.includes(lastChar)) {
+                        operator = lastChar;
                     } else {
-                        $("#text-area").html(textArea.slice(firstIndex, slicingBeforeCloseParenthesis) + (openParenthesis + previousCloseParenthesis + closeParenthesis.fontcolor("gray")));
+                        operator = mutilplicationSign;
+                    }
+                    // to capture the sequence of containing number with operations
+                    if (storedNumberSelected.length === 0) {
+                        //nothing will change because of not having number
+                    } else {
+                        storedOperators[index] = operator;
+                        index++;
                     }
                 }
-            }  
-            indexOfParenthesis++;
-            slicingBeforeCloseParenthesis--;
-            if (indexOfParenthesis === 1) {
-                // getting length without close parenthesis is the purpose of minus 1
-                if (indexOfParenthesis !== index) {
-                    lastLengthOfTextArea = $("#text-area").text().length - 1; 
+    
+                if ($("#text-area").text() === zero) {
+                    $("#text-area").html(openParenthesis + closeParenthesisHTML);
+                    haveParenthesis = true;
                 } else {
-                    lastLengthOfTextArea = $("#text-area").text().length - indexOfParenthesis; 
+                    let openAndCloseParenthesis = openParenthesis + closeParenthesisHTML;
+                    let previousCloseParenthesis = produceGreyCloseParenthesis(indexOfParenthesis);
+                    let haveValueAtNewParenthesis = haveParenthesis;
+                    if (haveValueAtNewParenthesis) {
+                        $("#text-area").html(textArea.slice(firstIndex, slicingBeforeCloseParenthesis) + (openAndCloseParenthesis + previousCloseParenthesis));
+                        haveValueAtNewParenthesis = false;
+                    } else {
+                        if (indexOfParenthesis === parseInt(zero)) {
+                            $("#text-area").html(textArea.slice(firstIndex) + (openParenthesis + closeParenthesisHTML));
+                        } else {
+                            $("#text-area").html(textArea.slice(firstIndex, slicingBeforeCloseParenthesis) + (openParenthesis + previousCloseParenthesis + closeParenthesisHTML));
+                        }
+                    }
+                }  
+                indexOfParenthesis++;
+                slicingBeforeCloseParenthesis--;
+                if (indexOfParenthesis === 1) {
+                    // getting length without close parenthesis is the purpose of minus 1
+                    if (indexOfParenthesis !== index) {
+                        lastLengthOfTextArea = $("#text-area").text().length - 1; 
+                    } else {
+                        lastLengthOfTextArea = $("#text-area").text().length - indexOfParenthesis; 
+                    }
+                } else {
+                    let newTextArea = $("#text-area").text(); 
+                    gettingValueStartAtOpenParenthesis = newTextArea.slice(lastLengthOfTextArea).length - indexOfParenthesis;
+                    gettingValueStartAtOpenParenthesis = gettingValueStartAtOpenParenthesis + lastLengthOfTextArea;
+                    lastLengthOfTextArea = gettingValueStartAtOpenParenthesis;
                 }
-            } else {
-                let newTextArea = $("#text-area").text(); 
-                gettingValueStartAtOpenParenthesis = newTextArea.slice(lastLengthOfTextArea).length - indexOfParenthesis;
-                gettingValueStartAtOpenParenthesis = gettingValueStartAtOpenParenthesis + lastLengthOfTextArea;
-                lastLengthOfTextArea = gettingValueStartAtOpenParenthesis;
-            }
-            break;
-        case ')':
-            if (haveParenthesis) {
-                let textArea = $("#text-area").text();
-                $("#text-area").html('(' + textArea.slice(1,-1) + ')');
-                haveParenthesis = false;
-            } else {
-                // stay at no have parenthesis
-            }
-            break;        
-        case '.':
-            if (dot) {
-                let textArea = $("#text-area").text();
-                if ($("#text-area").text() === "0" || equalButtonClick_And_NoOperatorIncludes) {
-                    storedNumberSelected[index] = 0;
-                    $("#text-area").text('.');
-                } else if (arithmethicOperators.includes(textArea.slice(-1))) {
-                    $("#text-area").text(textArea.slice(0, textArea.length) + operator);
-                    storedNumberSelected[index] = 0;
-                } else if (!textArea.slice(0, textArea.length).includes('.') || !textArea.slice(lastLengthOfTextArea + 1, textArea.length).includes('.')) {
-                    $("#text-area").text(textArea.slice(0, textArea.length) + operator);
+                break;
+            case ')':
+                if (haveParenthesis) {
+                    let textArea = $("#text-area").text();
+                    $("#text-area").html('(' + textArea.slice(1,-1) + ')');
+                    haveParenthesis = false;
+                } else {
+                    // stay at no have parenthesis
                 }
-                click = true;
-                dot = false;
-            }
-            break;
-        case '+':
-            operatorOperation(operator);
-            break;
-        case '-':
-            operatorOperation('−');
-            break;
-        case '−':
-            operatorOperation(operator);
-            break;
-        case '×':
-            operatorOperation(operator);
-            break;
-        case '*':
-            operatorOperation('×');
-            break;
-        case '/':
-            operatorOperation('÷');
-            break;
-        case '÷':
-            operatorOperation(operator);
-            break;
-        case 'Backspace':
-            remove();
-            break;
-        case '⌫':
-            remove();
-            break;
-        case 'CE':
-            reset();
-            break;
-        case 'Enter':
-            total();
-            break;    
-        case '=':
-            total();
-            break;
-        default:
-            break;
+                break;        
+            case '.':
+                if (dot) {
+                    let textArea = $("#text-area").text();
+                    if ($("#text-area").text() === "0" || equalButtonClick_And_NoOperatorIncludes) {
+                        storedNumberSelected[index] = 0;
+                        $("#text-area").text('.');
+                    } else if (arithmethicOperators.includes(textArea.slice(-1))) {
+                        $("#text-area").text(textArea.slice(0, textArea.length) + operator);
+                        storedNumberSelected[index] = 0;
+                    } else if (!textArea.slice(0, textArea.length).includes('.') || !textArea.slice(lastLengthOfTextArea + 1, textArea.length).includes('.')) {
+                        $("#text-area").text(textArea.slice(0, textArea.length) + operator);
+                    }
+                    click = true;
+                    dot = false;
+                }
+                break;
+            case 'CE':
+                reset();
+                break;
+            case 'Enter':  
+            case '=':
+                total();
+                break;
+            default:
+                break;
+        }
     }
+
 }
 
 function lastEquation(){
@@ -491,10 +452,8 @@ function orderOfOperation(indexOfLoop, indexOfStoredNumber, operator) {
                 indexInsideOfParenthesis++;     
                 newTotal = priorityOperator(indexOfLoop, operator);       
             }
-        } else if (beforeNextOperator === '×') {
+        } else if (beforeNextOperator === '×' || beforeNextOperator === '÷') {
             newTotal = priorityOperator(indexOfStoredNumber, operator);
-        } else if(beforeNextOperator === '÷'){
-            newTotal = skippedOperation(indexOfStoredNumber);
         }
 
         // condition in the parenthesis with operator 
@@ -512,49 +471,19 @@ function orderOfOperation(indexOfLoop, indexOfStoredNumber, operator) {
             priorityOperator(indexOfLoop, operator);
         }
 
-    } else if (nextOperator === '×') {
-        if (beforeNextOperator === '÷') {
-            skippedOperation(indexOfStoredNumber);
-        } else {
-            priorityOperator(indexOfStoredNumber, operator);
-        }
-    } else if (nextOperator === '÷') {
-        if ( (beforeNextOperator === '×' && indexOfLoop === 1) || beforeNextOperator === '×') {
-            // dont divide due to order of operation
-            skipOperation = true;
-            indexInSkip = indexOfStoredNumber;
-        } else {
-            priorityOperator(indexOfStoredNumber, operator);
-            if (!skipOperation) {
-                indexInSkip = 0;
-            }
-        }
-
+    } else if (nextOperator === '×' || nextOperator === '÷') {
+        priorityOperator(indexOfStoredNumber, operator);
         // beforeNextOperator is the for the last index operation
-    } else if (beforeNextOperator === '+' || beforeNextOperator === '−') {
+    } else if (OPERATIONS.includes(beforeNextOperator)) {
         newTotal = priorityOperator(indexOfStoredNumber, operator);
-    } else if (beforeNextOperator === '×' || beforeNextOperator === '÷') {
-        if (beforeNextOperator === '÷') {
-            let valueOfDivided = priorityOperator(indexOfStoredNumber, operator);
-            if (storedOperators[indexOfLoop - 2] === '+' || storedOperators[indexOfLoop - 2] === '−') {
-                newTotal = valueOfDivided;
-            } else {
-                const valueOfLastOperation = storedOperators[indexOfLoop  - 2] === '×' || indexInSkip >= 1 
-                ? valueOfDivided * storedNumberProcess[indexInSkip - 1]
-                : valueOfDivided;
-                newTotal = valueOfLastOperation;
-            }
-        } else {
-            newTotal = priorityOperator(indexOfStoredNumber, operator);
-        }
     }
     return newTotal;
 }
 
 function additionSubtractionPerform (indexOfStoredNumber, operator) {
-    const totalValueWithParenthesis = operator === '+' ? storedNumberProcess[indexOfStoredNumber] + storedNumberProcess[indexOfStoredNumber + 1]:
+    return operator === '+' ? storedNumberProcess[indexOfStoredNumber] + storedNumberProcess[indexOfStoredNumber + 1]:
     storedNumberProcess[indexOfStoredNumber] - storedNumberProcess[indexOfStoredNumber + 1];
-    return totalValueWithParenthesis;
+    // return totalValueWithParenthesis;
 }
 
 function additionStoreProcess(indexIteration, operator) {
@@ -571,7 +500,7 @@ function additionOrSubtractionForTotal(indexIteration, operator) {
     const lastTermIndex = storedNumberSelected.length - indexIteration;
 
     if (storedOperators[indexIteration] === '×' || storedOperators[indexIteration] === '÷') {
-        indexInSkip = indexForStoredNumbers;
+        // indexInSkip = indexForStoredNumbers;
         indexForStoredNumbers++;
         storedNumberProcess.push(storedNumberSelected[indexIteration]);
         indexInsideOfParenthesis++;
@@ -594,8 +523,9 @@ function additionOrSubtractionForTotal(indexIteration, operator) {
         }   
         totalEqual += additionStoreProcess(indexIteration, operator) - totalEqual;
     } else if (operator === '−' || operator === '+') {
-        const addOrMinus = operator === '+' ? totalEqual += storedNumberSelected[indexIteration]:
-        totalEqual -= storedNumberSelected[indexIteration];
+        const addOrMinus = operator === '+' 
+        ? totalEqual += storedNumberSelected[indexIteration]
+        : totalEqual -= storedNumberSelected[indexIteration];
     } 
 }
 
@@ -616,16 +546,11 @@ function total() {
     for(let i = 0; i < storedNumberSelected.length; i++) {                               
         if(i >= 1) {
             let operator = storedOperators[i-1];  
-            if (operator === '+' ) {
-                additionOrSubtractionForTotal(i, '+');
-                operatorUsedAddOrMinus = false;
-            } else if (operator === '×') {
-                multiplicationOrDivision(operatorUsedAddOrMinus, i, indexForStoredNumbers, '×');
-            } else if (operator === '÷') {
-                multiplicationOrDivision(operatorUsedAddOrMinus, i, indexForStoredNumbers, '÷');
-            } else if (operator === '−') {
-                additionOrSubtractionForTotal(i, '−');
-                operatorUsedAddOrMinus = true;
+            if (operator === '+' || operator === '−') {
+                additionOrSubtractionForTotal(i, operator);
+                operatorUsedAddOrMinus = operator === '−';
+            } else if (operator === '×' || operator === '÷') {
+                multiplicationOrDivision(operatorUsedAddOrMinus, i, indexForStoredNumbers, operator);
             }
         } else {
             if(storedOperators[i] === '×' || storedOperators[i] === '÷'){
@@ -714,7 +639,7 @@ function displayClickedToTextArea(clickedButton) {
     let textArea = $("#text-area").text();
     if (textArea.includes(closeParenthesis)) {
         if(textArea === "()") {
-            $("#text-area").html(openParenthesis + clickedButton + closeParenthesis.fontcolor("gray"));
+            $("#text-area").html(openParenthesis + clickedButton + closeParenthesisHTML);
         } else {
             let totalOfCloseParenthesis = produceGreyCloseParenthesis(indexOfParenthesis);
             let startingPoint;
@@ -723,8 +648,8 @@ function displayClickedToTextArea(clickedButton) {
             } else {
                 startingPoint = 1;
             }
-            let previousDisplay = textArea.slice(startingPoint, slicingBeforeCloseParenthesis);
-            previousDisplay = previousDisplay + clickedButton;
+            let previousDisplay = textArea.slice(startingPoint, slicingBeforeCloseParenthesis) + clickedButton;
+            // previousDisplay = previousDisplay + clickedButton;
             if (textArea.charAt(firstIndex) !== openParenthesis || clickedButton) {
                 $("#text-area").html(previousDisplay + totalOfCloseParenthesis);
             } else {
