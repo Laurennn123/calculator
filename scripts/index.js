@@ -120,6 +120,8 @@ const ARITHMETIC_OPERATORS = ['+', '−', '÷', '×'];
 let haveParenthesis = false;
 let nextIndex = true;
 
+let parenthesisSequence = []
+
 function calculatorOperator(operator) {
     if (NUMBER_OPERATORS.includes(operator)) {
         calculatorButtons(operator);
@@ -147,7 +149,6 @@ function calculatorOperator(operator) {
                 }  
                 indexOfParenthesis++;
                 backwardIndexCloseparenthesis--;
-                nextIndex = true;
                 if (indexOfParenthesis === 1) {
                     // getting length without close parenthesis is the purpose of minus 1
                     if (indexOfParenthesis !== index) {
@@ -161,6 +162,7 @@ function calculatorOperator(operator) {
                     gettingValueStartAtOpenParenthesis = gettingValueStartAtOpenParenthesis + lastLengthOfTextArea;
                     lastLengthOfTextArea = gettingValueStartAtOpenParenthesis;
                 }
+                nextIndex = true;
                 click = false;
                 break;
             case ')':
@@ -379,11 +381,15 @@ function priorityOperator(indexStoredNumber, operator) {
     return VALUE_OF_OPERATED;
 }
 
-function additionSubtraction(indexOfLoop, operator) {
+function additionSubtraction(addOrMinus, indexOfLoop, indexOfStoredNumber, operator) {
     let totalEqual = 0;
-    return totalEqual = operator === '−'
-    ? totalEqual -= storedNumberSelected[indexOfLoop]
-    : totalEqual += storedNumberSelected[indexOfLoop];
+    return totalEqual = operator === '−' || operator === '+'
+    ? totalEqual = operator === '−'
+        ? totalEqual -= storedNumberSelected[indexOfLoop]
+        : totalEqual += storedNumberSelected[indexOfLoop]
+    : addOrMinus 
+        ? totalEqual -= orderOfOperation(indexOfLoop, indexOfStoredNumber, operator)
+        : totalEqual += orderOfOperation(indexOfLoop, indexOfStoredNumber, operator);
 }
 
 function orderOfOperation(indexOfLoop, indexOfStoredNumber, operator) {
@@ -403,33 +409,31 @@ function orderOfOperation(indexOfLoop, indexOfStoredNumber, operator) {
 }
 
 function arithmeticOperations(addOrMinus, indexOfLoop, indexOfStoredNumber, operator) {
-    let totalEqual = 0;
     const TEXT_AREA = $("#text-area").text();
     const NEXT_OPERATOR = storedOperators[indexOfLoop];
 
-    if (TEXT_AREA.includes(closeParenthesis) && indexOfLoop === 1) {
+    if (TEXT_AREA.includes(closeParenthesis) && parenthesisSequence[indexOfLoop - 1] === '×') {
         storedNumberProcess.push(storedNumberSelected[indexOfLoop]);
         indexForStoredNumbers++;
+        parenthesisSequence.push(storedNumberProcess[indexOfLoop - 1]);
         return totalEqual = NEXT_OPERATOR === '+' || NEXT_OPERATOR === '−'
-        ? additionSubtraction(indexOfLoop, operator)
-        : 0;
+        ? storedNumberSelected[indexOfLoop]
+        : indexOfLoop === 1 
+            ? 0 
+            : storedNumberProcess[indexOfLoop - 1];
     } else if (TEXT_AREA.includes(closeParenthesis) && storedNumberSelected.length - indexOfLoop === 1) {
-        return totalEqual = operator === '+' || operator === '−'
-        ? additionSubtraction(indexOfLoop, operator)
-        : totalEqual += orderOfOperation(indexOfLoop, indexOfStoredNumber, operator);
+        return totalEqual = additionSubtraction(addOrMinus, indexOfLoop, indexOfStoredNumber, operator);
     } else if (operator === '+' || operator === '−') {
         if (storedOperators[indexOfLoop] === '×' || storedOperators[indexOfLoop] === '÷') {
             indexForStoredNumbers++;
             storedNumberProcess.push(storedNumberSelected[indexOfLoop]);
             return 0;
         } else if (operator === '−' || operator === '+') {
-            return totalEqual = additionSubtraction(indexOfLoop, operator);
+            return totalEqual = additionSubtraction(addOrMinus, indexOfLoop, indexOfStoredNumber, operator);
         } 
     }
     indexForStoredNumbers++;
-    return totalEqual = addOrMinus  
-    ? totalEqual -= orderOfOperation(indexOfLoop, indexOfStoredNumber, operator)
-    : totalEqual += orderOfOperation(indexOfLoop, indexOfStoredNumber, operator);
+    return totalEqual = additionSubtraction(addOrMinus, indexOfLoop, indexOfStoredNumber, operator); 
 }
 
 function total() {
@@ -445,7 +449,16 @@ function total() {
             } 
             totalEqual += arithmeticOperations(operatorUsedAddOrMinus, i, indexForStoredNumbers, operator);
             if (TEXT_AREA.includes(closeParenthesis) && storedNumberSelected.length - i === 1) {
-                totalEqual = totalEqual * storedNumberProcess[FIRST_INDEX];
+                parenthesisSequence.splice(0, (parenthesisSequence.lastIndexOf('×') + 1));
+                let multipliedWithParen = 0;
+                for (let a = 0; a < parenthesisSequence.length; a++) {
+                    if (a === 0) {
+                        multipliedWithParen = parenthesisSequence[a] * storedNumberProcess[i];
+                    } else {
+                        multipliedWithParen *= parenthesisSequence[a];
+                    }
+                }
+                totalEqual = multipliedWithParen;
             }
         } else {
             if (storedOperators[i] === '×' || storedOperators[i] === '÷') {
@@ -550,6 +563,7 @@ function displayClickedToTextArea(clickedButton) {
                 $("#text-area").html(previousDisplay);
                 if (nextIndex) {
                     storedOperators.push('×');
+                    parenthesisSequence[index] = '×';
                     index++;
                     nextIndex = false
                 } 
