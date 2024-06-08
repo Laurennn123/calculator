@@ -1,12 +1,11 @@
 let index = 0;
 let storedNumberSelected = [];
 let storedOperators = [];
-let storedNumberProcess = [];
 let newLengthOfTextArea;
 let lastLengthOfTextArea;
 let lastIndex;
 let lastTextArea = "";
-let click = true;
+let clickButton = true;
 let dot = true;
 let equalButtonClick_And_NoOperatorIncludes = false;
 let backwardIndexCloseparenthesis = 0;
@@ -87,7 +86,7 @@ function calculatorButtons(clickedButton) {
             }
             storedNumberSelected[index] = parseFloat(getNumberValueBeforeOperatorOrParenthesis);
         }
-        click = true;
+        clickButton = true;
 
     } else {
         let textArea = $("#text-area").text();
@@ -163,7 +162,7 @@ function calculatorOperator(operator) {
                     lastLengthOfTextArea = gettingValueStartAtOpenParenthesis;
                 }
                 nextIndex = true;
-                click = false;
+                clickButton = false;
                 break;
             case ')':
                 break;        
@@ -179,7 +178,7 @@ function calculatorOperator(operator) {
                     } else if (!textArea.slice(0, textArea.length).includes('.') || !textArea.slice(lastLengthOfTextArea + 1, textArea.length).includes('.')) {
                         $("#text-area").text(textArea.slice(0, textArea.length) + operator);
                     }
-                    click = true;
+                    clickButton = true;
                     dot = false;
                 }
                 break;
@@ -243,7 +242,7 @@ function remove() {
             lastEquation();
         } else if (ARITHMETIC_OPERATORS.includes(textArea.slice(-1))) {
             storedOperators.pop();
-            click = true;
+            clickButton = true;
             index--;
             if (storedOperators.length === 0) {
                 newLengthOfTextArea = undefined;
@@ -270,7 +269,7 @@ function remove() {
                         storedNumberSelected[index] = parseFloat(intToString.slice(0, -1))
                     }    
                 }       
-            }else if (textArea.at(-1) === '.' || textArea.at(-1) === '0') {
+            } else if (textArea.at(-1) === '.' || textArea.at(-1) === '0') {
                 if (intToString === '0') {
                     if (textArea.at(0) === '.') {
                         //remain the 0
@@ -287,9 +286,9 @@ function remove() {
                 dot = true;
                 let textArea = $("#text-area").text();
                 if (!ARITHMETIC_OPERATORS.includes(textArea.slice(-1))) {
-                    click = true;
+                    clickButton = true;
                 } else {
-                    click = false;
+                    clickButton = false;
                 }
             } else if (intToString.length >= 2) {
                 storedNumberSelected.pop();
@@ -298,7 +297,7 @@ function remove() {
             } else {
                 dot = true;
                 storedNumberSelected.pop();
-                click = false;
+                clickButton = false;
             }
 
         }
@@ -313,11 +312,12 @@ function remove() {
 }
 
 let indexForStoredNumbers = 0;
+let storedNumberProcess = [];
 
 function reset() {
-    click = true;
+    clickButton = true;
     dot = true;
-    if (click) {
+    if (clickButton) {
         $("#text-area").text(0).css("font-size", "3rem");
     }
     $("#last-total").text("");
@@ -338,8 +338,8 @@ function operatorOperation(operatorButton) {
     let textArea = $("#text-area").text();
     let lastChar = textArea.slice(-1);
 
-    if (click) {
-        if ($("#text-area").text() === "0") {
+    if (clickButton) {
+        if ($("#text-area").text() === '0') {
             storedNumberSelected[index] = 0;
         } 
         equalButtonClick_And_NoOperatorIncludes = false;
@@ -349,7 +349,7 @@ function operatorOperation(operatorButton) {
         } else {
             $("#text-area").text(textArea.slice(0, textArea.length-1) + operatorButton); 
         }   
-        click = false;
+        clickButton = false;
         dot = true;
     } else {
         const outsideOperator = -1;
@@ -358,7 +358,7 @@ function operatorOperation(operatorButton) {
         const OPERATOR_INSIDE_OR_NONE = inOrOutOperator === outsideOperator
         ? textArea.slice(inOrOutOperator)
         : textArea.slice(inOrOutOperator).slice(0, backwardIndexCloseparenthesis); 
-        if (click || !ARITHMETIC_OPERATORS.includes(OPERATOR_INSIDE_OR_NONE)) {
+        if (clickButton || !ARITHMETIC_OPERATORS.includes(OPERATOR_INSIDE_OR_NONE)) {
             displayClickedToTextArea(operatorButton);   
         } else {
             if (ARITHMETIC_OPERATORS.includes(lastChar)) {
@@ -372,105 +372,124 @@ function operatorOperation(operatorButton) {
     storedOperators[indexForOperator] = operatorButton;
 }
 
-function priorityOperator(indexStoredNumber, operator) {
-    const VALUE_OF_OPERATED = operator === '×' 
-    ? storedNumberProcess[indexStoredNumber-1] * storedNumberProcess[indexStoredNumber]
-    : storedNumberProcess[indexStoredNumber-1] / storedNumberProcess[indexStoredNumber];
+const ADDITION = '+';
+const SUBTRACTION = '−';
+const MULTIPLICATION = '×';
+const DIVISION = '÷';
+
+function multiplyOrDivide(operator) {
+    const NEW_VALUE_OPERATED = operator === MULTIPLICATION 
+    ? storedNumberProcess[indexForStoredNumbers - 1] * storedNumberProcess[indexForStoredNumbers]
+    : storedNumberProcess[indexForStoredNumbers - 1] / storedNumberProcess[indexForStoredNumbers];
     storedNumberProcess.pop();
-    storedNumberProcess.push(VALUE_OF_OPERATED);
-    return VALUE_OF_OPERATED;
+    storedNumberProcess.push(NEW_VALUE_OPERATED);
+    return NEW_VALUE_OPERATED;
 }
 
-function additionSubtraction(addOrMinus, indexOfLoop, indexOfStoredNumber, operator) {
+function addOrSubtract(addOrMinus, indexOfLoop, operator) {
     let totalEqual = 0;
-    return totalEqual = operator === '−' || operator === '+'
-    ? totalEqual = operator === '−'
+    return totalEqual = operator === SUBTRACTION || operator === ADDITION
+    ? totalEqual = operator === SUBTRACTION
         ? totalEqual -= storedNumberSelected[indexOfLoop]
         : totalEqual += storedNumberSelected[indexOfLoop]
     : addOrMinus 
-        ? totalEqual -= orderOfOperation(indexOfLoop, indexOfStoredNumber, operator)
-        : totalEqual += orderOfOperation(indexOfLoop, indexOfStoredNumber, operator);
+        ? totalEqual -= orderOfOperation(indexOfLoop, operator)
+        : totalEqual += orderOfOperation(indexOfLoop, operator);
 }
 
-function orderOfOperation(indexOfLoop, indexOfStoredNumber, operator) {
+function orderOfOperation(indexOfLoop, operator) {
     const NEXT_OPERATOR = storedOperators[indexOfLoop];
-    const BEFORE_NEXT_OPERATOR = storedOperators[indexOfLoop-1]; 
     storedNumberProcess.push(storedNumberSelected[indexOfLoop]);
     
-    if (NEXT_OPERATOR === '+' || NEXT_OPERATOR === '−') {
-        if (BEFORE_NEXT_OPERATOR === '×' || BEFORE_NEXT_OPERATOR === '÷') {
-            return newTotal = priorityOperator(indexOfStoredNumber, operator);
-        } 
-    } else if (NEXT_OPERATOR === '×' || NEXT_OPERATOR === '÷') {
-        priorityOperator(indexOfStoredNumber, operator);
+    if ((NEXT_OPERATOR === MULTIPLICATION || NEXT_OPERATOR === DIVISION) && parenthesisSequence[indexOfLoop] != MULTIPLICATION) {
+        multiplyOrDivide(operator);
         return 0;
     }
-    return newTotal = priorityOperator(indexOfStoredNumber, operator);
+
+    return newTotal = multiplyOrDivide(operator);
 }
 
-function arithmeticOperations(addOrMinus, indexOfLoop, indexOfStoredNumber, operator) {
+const VALUE_IN_EACH_PARENTHESIS = [];
+
+function arithmeticOperations(addOrMinus, indexOfLoop, operator) {
     const TEXT_AREA = $("#text-area").text();
     const NEXT_OPERATOR = storedOperators[indexOfLoop];
 
-    if (TEXT_AREA.includes(closeParenthesis) && parenthesisSequence[indexOfLoop - 1] === '×') {
+    if (TEXT_AREA.includes(closeParenthesis) && parenthesisSequence[indexOfLoop - 1] === MULTIPLICATION) {
         storedNumberProcess.push(storedNumberSelected[indexOfLoop]);
-        indexForStoredNumbers++;
-        parenthesisSequence.push(storedNumberProcess[indexOfLoop - 1]);
-        return totalEqual = NEXT_OPERATOR === '+' || NEXT_OPERATOR === '−'
-        ? storedNumberSelected[indexOfLoop]
-        : indexOfLoop === 1 
-            ? 0 
-            : storedNumberProcess[indexOfLoop - 1];
-    } else if (TEXT_AREA.includes(closeParenthesis) && storedNumberSelected.length - indexOfLoop === 1) {
-        return totalEqual = additionSubtraction(addOrMinus, indexOfLoop, indexOfStoredNumber, operator);
-    } else if (operator === '+' || operator === '−') {
-        if (storedOperators[indexOfLoop] === '×' || storedOperators[indexOfLoop] === '÷') {
-            indexForStoredNumbers++;
+        if (NEXT_OPERATOR === ADDITION || NEXT_OPERATOR === SUBTRACTION) {
+            return totalEqual = storedNumberSelected[indexOfLoop];
+        }
+        return 0;
+    } 
+    
+    if (operator === ADDITION || operator === SUBTRACTION) {
+        if ((NEXT_OPERATOR === MULTIPLICATION || NEXT_OPERATOR === DIVISION) && parenthesisSequence[indexOfLoop] !== MULTIPLICATION) {
             storedNumberProcess.push(storedNumberSelected[indexOfLoop]);
             return 0;
-        } else if (operator === '−' || operator === '+') {
-            return totalEqual = additionSubtraction(addOrMinus, indexOfLoop, indexOfStoredNumber, operator);
         } 
+
+        if (parenthesisSequence[indexOfLoop] === MULTIPLICATION) {
+            storedNumberProcess.push(storedNumberSelected[indexOfLoop]);
+        }
+    
+        return totalEqual = addOrSubtract(addOrMinus, indexOfLoop, operator);
     }
-    indexForStoredNumbers++;
-    return totalEqual = additionSubtraction(addOrMinus, indexOfLoop, indexOfStoredNumber, operator); 
+
+    if (parenthesisSequence[indexOfLoop] === MULTIPLICATION) {
+        indexOperatorForSequence.push(storedOperators[storedNumberSelected.indexOf(storedNumberSelected[indexOfLoop - 1])]);
+        indexForGettingValue++;
+    }
+
+    return totalEqual = addOrSubtract(addOrMinus, indexOfLoop, operator); 
 }
 
 function total() {
-    let operatorUsedAddOrMinus = false;
+    let isMinusOperator = false;
     let totalEqual = 0; 
-    const TEXT_AREA = $("#text-area").text();
-    
-    for (let i = 0; i < storedNumberSelected.length; i++) {
-        if(i >= 1) {
-            let operator = storedOperators[i - 1];
-            if (operator === '+' || operator === '−') {
-                operatorUsedAddOrMinus = operator === '−';
+    const SECOND_INDEX = 1;
+
+    for (let index = 0; index < storedNumberSelected.length; index++) {
+        if(index != FIRST_INDEX) {
+            const OPERATOR = storedOperators[index - 1];
+            const NEXT_OPERATOR = storedOperators[index];
+
+            if (OPERATOR === '+' || OPERATOR === '−') {
+                isMinusOperator = OPERATOR === '−';
             } 
-            totalEqual += arithmeticOperations(operatorUsedAddOrMinus, i, indexForStoredNumbers, operator);
-            if (TEXT_AREA.includes(closeParenthesis) && storedNumberSelected.length - i === 1) {
-                parenthesisSequence.splice(0, (parenthesisSequence.lastIndexOf('×') + 1));
-                let multipliedWithParen = 0;
-                for (let a = 0; a < parenthesisSequence.length; a++) {
-                    if (a === 0) {
-                        multipliedWithParen = parenthesisSequence[a] * storedNumberProcess[i];
-                    } else {
-                        multipliedWithParen *= parenthesisSequence[a];
-                    }
-                }
-                totalEqual = multipliedWithParen;
+
+            totalEqual += arithmeticOperations(isMinusOperator, index, OPERATOR);
+
+            if (parenthesisSequence[index] === MULTIPLICATION && index != SECOND_INDEX) {
+                VALUE_IN_EACH_PARENTHESIS.push(totalEqual);
+                totalEqual = 0;
+            } else if (parenthesisSequence.length > 1 && storedNumberSelected.length - index === 1) {
+                VALUE_IN_EACH_PARENTHESIS.push(totalEqual);
+                totalEqual = storedNumberProcess[0];
+                VALUE_IN_EACH_PARENTHESIS.forEach((value) => {
+                    totalEqual *= value;
+                });
             }
+
+            if (parenthesisSequence.length === 1 && storedNumberSelected.length - index === 1) {
+                totalEqual = storedNumberProcess[0] * totalEqual;
+            }
+
+            if (OPERATOR === MULTIPLICATION || OPERATOR === DIVISION || NEXT_OPERATOR === MULTIPLICATION || NEXT_OPERATOR === DIVISION) {
+                indexForStoredNumbers++;
+            }
+
         } else {
-            if (storedOperators[i] === '×' || storedOperators[i] === '÷') {
-                storedNumberProcess.push(storedNumberSelected[i]);
+            if (storedOperators[index] === MULTIPLICATION || storedOperators[index] === DIVISION) {
+                storedNumberProcess.push(storedNumberSelected[index]);
                 indexForStoredNumbers++;
             } else {
-                totalEqual = storedNumberSelected[i];
+                totalEqual = storedNumberSelected[index];
             }
         }
     }
 
-    if(click) {
+    if(clickButton) {
         if (totalEqual.toString() != $("#text-area").text()) {
             collectLastStoredData();
             //i will implement here a button that selects how many decimal they want.
@@ -567,8 +586,8 @@ function displayClickedToTextArea(clickedButton) {
                     index++;
                     nextIndex = false
                 } 
-                click = true;
-            } else if (ARITHMETIC_OPERATORS.includes(clickedButton) && click){
+                clickButton = true;
+            } else if (ARITHMETIC_OPERATORS.includes(clickedButton) && clickButton){
                 $("#text-area").html(previousDisplay);
             }
         }
