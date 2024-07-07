@@ -21,28 +21,36 @@ const isTextAreaHaveParenthesis = ({clickedButton}) => {
             const isHaveDot = textArea.slice(indexForStartingNumber, textArea.length).includes(dot);
 
             if (arithmeticOperators.includes(lastCharacter) && arithmeticOperators.includes(clickedButton)) {
-                const textAreaWithoutOperator = getTextAreaWithoutCloseParen.slice(0, $("#text-area").text().length - indexOfTotalParenthesis);
+                const textAreaWithoutOperator = getTextAreaWithoutCloseParen.slice(0, $("#text-area").text().length - 1);
                 $("#text-area").text(`${textAreaWithoutOperator}${clickedButton}`);
+                storedOperators.splice(storedOperators.length - 1, 1, clickedButton);
             } else if ((!isHaveDot && clickedButton === dot) || clickedButton !== dot) {
                 document.querySelector("#text-area").innerHTML += clickedButton;
             };
             
         };
 
-        if (lastCharacter === openParenthesis || arithmeticOperators.includes(lastCharacter)) {
-            indexForStartingNumber = getTextAreaWithoutCloseParen.length;
-            const isItOperator = arithmeticOperators.includes(lastCharacter) ? lastCharacter : openParenthesis;
+        if (((lastCharacter === openParenthesis && !arithmeticOperators.includes(clickedButton)) || (arithmeticOperators.includes(clickedButton) && lastCharacter !== openParenthesis)) && !arithmeticOperators.includes(lastCharacter)) {
+            const isClickedOperator = arithmeticOperators.includes(clickedButton) ? 1 : 0;
+            indexForStartingNumber = getTextAreaWithoutCloseParen.length + isClickedOperator;
+            const isItOperator = arithmeticOperators.includes(clickedButton) ? clickedButton : openParenthesis;
             storedOperators.push(isItOperator);
         };
 
         while (index != 0) {
-            document.querySelector("#text-area").innerHTML += closeParenthesisHTML;
+            if (index === indexOfTotalParenthesis) {
+                document.querySelector("#text-area").innerHTML += closeParenthesisHTML;
+            } else {
+                document.querySelector("#close-paren").innerText += ')';
+            }
             index--;
         };
-
+        console.log(storedNumberSelected, storedOperators)
         return true;
     };
 };
+
+let operatorThenParenIndex = 0;
 
 const displayClickedNumber = (numberClicked) => {
     const textArea = $("#text-area").text();
@@ -51,7 +59,9 @@ const displayClickedNumber = (numberClicked) => {
 
     if (textArea === zero && ((itsFirstCharNotDot && numberClicked !== zero) || numberClicked === zero)) {
         $("#text-area").text(numberClicked);
-        storedNumberSelected.push(numberClicked)
+        storedNumberSelected.push(parseInt(numberClicked))
+        indexForStartingNumber = 0;
+        console.log(storedNumberSelected)
         return;
     };
 
@@ -60,9 +70,14 @@ const displayClickedNumber = (numberClicked) => {
     if (indexOfTotalParenthesis === parseInt(zero)) document.querySelector("#text-area").innerText += numberClicked;
 
     const updatedTextArea = $("#text-area").text();
+    const checkingElementBeforeParen = $("#text-area").text().substring(0, (indexForStartingNumber - 1)).slice(-1)
+    const isOpenParen = $("#text-area").text().substring(0, indexForStartingNumber).slice(-1);
+    if (arithmeticOperators.includes(checkingElementBeforeParen) && isOpenParen === '(') operatorThenParenIndex++;
+    const index = storedOperators.length - operatorThenParenIndex;
     const value = updatedTextArea.slice(indexForStartingNumber, updatedTextArea.length);
-    const indexForAdding = storedOperators.length === 0 ? 0 : storedOperators.length;
+    const indexForAdding = storedOperators.length === 0 ? 0 : index;
     storedNumberSelected.splice(indexForAdding, 1, parseFloat(value));
+    console.log(storedNumberSelected, storedOperators);
 };
 
 const displayClickedArithOperator = (operator) => {
