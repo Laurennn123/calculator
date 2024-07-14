@@ -1,9 +1,7 @@
-import { storedOperators } from "./NumberAndOperatorButtons.js";
-
 const arithmeticOperators = ['+', '−', '×', '÷', '(']; 
 const [ADDITION, SUBTRACTION, MULTIPLICATION, DIVISION, openParenthesis] = arithmeticOperators;
 
-const isNextOperatorMultiOrDiv = ({operator}) => {
+const isNextOperatorMulDivOrParen = ({operator}) => {
   return operator === MULTIPLICATION || operator === DIVISION || operator === openParenthesis ? true : false;
 };
 
@@ -30,16 +28,14 @@ const operations = (operator, total, value) => {
   return equalValue;
 };
 
-const storedValueBeforeParen = [];
-
-const totalValueWithParen = (storedValueBeforeParen, lastTotalValueAtLastParen) => {
+const totalValue = (storedValueForTotal, lastTotalValueAtLastParen) => {
   let total = 0;
-  storedValueBeforeParen.reverse();
+  storedValueForTotal.reverse();
 
-  for (let index = 0; index < storedValueBeforeParen.length; index++) {
+  for (let index = 0; index < storedValueForTotal.length; index++) {
     for (let indexInOperators = 0; indexInOperators < 1; indexInOperators++) {
-      const value = storedValueBeforeParen[index][indexInOperators + 1]
-      const operator = storedValueBeforeParen[index][indexInOperators];
+      const value = storedValueForTotal[index][indexInOperators + 1]
+      const operator = storedValueForTotal[index][indexInOperators];
       const equalValue = index === 0 ? operations(operator, lastTotalValueAtLastParen, value) : operations(operator, total, value);
       total = equalValue;
     }
@@ -48,27 +44,28 @@ const totalValueWithParen = (storedValueBeforeParen, lastTotalValueAtLastParen) 
   return total;
 }
 
-let indexOfHaveOpBeforeParen = [];
+const indexOfHaveOpBeforeParen = [];
+const storedValueForTotal = [];
 
-const isOperatorBeforeParen = (indexNumber) => {
-  const operator = storedOperators[indexNumber - 1];
-  const isOperatorOrNot = $("#text-area").text().substring(0, indexOfHaveOpBeforeParen[0]).slice(-1);
-  const indexOfParen = storedOperators.indexOf(openParenthesis, indexNumber);
-  if (operator === isOperatorOrNot && (indexOfParen === indexNumber || storedOperators[0] === openParenthesis)) {
-    indexOfHaveOpBeforeParen.shift();
+const isOperatorBeforeParen = () => {
+  const isOperator = $("#text-area").text().substring(0, indexOfHaveOpBeforeParen[0]).slice(-1);
+  indexOfHaveOpBeforeParen.shift();
+  if (arithmeticOperators.includes(isOperator)) {
     return true;
   }
   return false;
 };
 
+
+
 const calculateTotal = (storedNumberSelected, storedOperators) => {
-  const storedMulOrDiv = [];
   const split = [...$("#text-area").text()]; 
   const indexOfParen = split.reduce((accumulator, element, index) => {
-    if (element === '(' && arithmeticOperators.includes(split[index - 1])) accumulator.push(index);
+    if (element === openParenthesis && split[index - 1] !== openParenthesis && split[index - 1] !== undefined) accumulator.push(index);
     return accumulator;
   }, []);
-  indexOfHaveOpBeforeParen = [...indexOfParen];
+  indexOfHaveOpBeforeParen.push(...indexOfParen);
+  const storedMulOrDiv = [];
   let isAddition = false;
 
   const total = storedNumberSelected.reduce((accumulator, value, index) => {
@@ -76,12 +73,13 @@ const calculateTotal = (storedNumberSelected, storedOperators) => {
     const isNextParenthesis = storedOperators[index] === openParenthesis;
     const isLastIndex = storedNumberSelected.length - index === 1;
 
-    if (index === 0 || storedOperators[index - 1] === openParenthesis) {
+    if (index === 0 || operator === openParenthesis) {
       if (isNextParenthesis) {
-        storedValueBeforeParen.push([MULTIPLICATION, value]);
+        indexOfHaveOpBeforeParen.shift();
+        storedValueForTotal.push([MULTIPLICATION, value]);
       }
       if (isLastIndex) {
-        return accumulator = totalValueWithParen(storedValueBeforeParen, value);
+        return accumulator = totalValue(storedValueForTotal, value);
       };
       return accumulator = value;
     };
@@ -91,75 +89,76 @@ const calculateTotal = (storedNumberSelected, storedOperators) => {
 
       let newTotalBeforeNextValue = operator === ADDITION ? accumulator + value : accumulator - value;
 
-      if (isNextOperatorMultiOrDiv({operator: storedOperators[index]}) && storedOperators[index] !== openParenthesis) {
-        const isOperatorBeforeParenMulOrDiv = storedOperators[storedOperators.indexOf(openParenthesis, index) - 1] === MULTIPLICATION || storedOperators[storedOperators.indexOf(openParenthesis, index) - 1] === DIVISION;
+      if (isNextOperatorMulDivOrParen({operator: storedOperators[index]}) && storedOperators[index] !== openParenthesis) {
+        const isOperatorBeforeParen_MulOrDiv = storedOperators[storedOperators.indexOf(openParenthesis, index) - 1] === MULTIPLICATION || storedOperators[storedOperators.indexOf(openParenthesis, index) - 1] === DIVISION;
+        const isAfterNextOperator_MulDivOrParen = storedOperators[index + 1] === MULTIPLICATION || storedOperators[index + 1] === DIVISION || storedOperators[index + 1] === openParenthesis;
         storedMulOrDiv.push(value);
-        if ((storedOperators[index + 1] === MULTIPLICATION || storedOperators[index + 1] === DIVISION || storedOperators[index + 1] === openParenthesis) && isOperatorBeforeParenMulOrDiv) {
-          storedValueBeforeParen.push([operator, accumulator]);
+        if (isAfterNextOperator_MulDivOrParen && isOperatorBeforeParen_MulOrDiv) {
+          storedValueForTotal.push([operator, accumulator]);
         };
         return accumulator;
       };
       
       if (isNextParenthesis) {
-        if ((storedOperators[index - 2] === DIVISION || storedOperators[index - 2] === MULTIPLICATION || storedOperators[index - 2] === openParenthesis) || isNextParenthesis) {
-          storedValueBeforeParen.push([operator, accumulator]);
-        }; 
-        if (isOperatorBeforeParen(index)) { /* e.g. 6(5-(5x2)) */
+        storedValueForTotal.push([operator, accumulator]);
+        if (isOperatorBeforeParen()) { /* e.g. 6(5-(5)) */
           if (!isLastIndex) {
             storedOperators.splice(index, 1);
             return accumulator = value;
           };
           newTotalBeforeNextValue = value;
         } else {
-          storedValueBeforeParen.push([MULTIPLICATION, value]);
+          storedValueForTotal.push([MULTIPLICATION, value]);
         };
       };
       
       if (storedOperators[index + 1] === openParenthesis && !arithmeticOperators.includes(storedOperators[index])) {
-        storedValueBeforeParen.push([storedOperators[index], newTotalBeforeNextValue]);
+        storedValueForTotal.push([storedOperators[index], newTotalBeforeNextValue]);
       };
 
-      return accumulator = isLastIndex && storedOperators.includes(openParenthesis) ? totalValueWithParen(storedValueBeforeParen, newTotalBeforeNextValue) : newTotalBeforeNextValue; 
+      return accumulator = isLastIndex && storedOperators.includes(openParenthesis) ? totalValue(storedValueForTotal, newTotalBeforeNextValue) : newTotalBeforeNextValue; 
     };
 
-    if (isOperatorBeforeParen(index)) {
-      if (isNextOperatorMultiOrDiv({operator: storedOperators[index]}) && storedMulOrDiv.length === 1) {
-        storedValueBeforeParen.push([operator, storedMulOrDiv[0]]);
-        storedMulOrDiv.pop();
+    if (isNextParenthesis) {
+      if (isOperatorBeforeParen()) {
+        const storeValue = storedMulOrDiv.length === 1 ? storedMulOrDiv[0] : accumulator;
+        storedValueForTotal.push([operator, storeValue]); 
+        if (storedMulOrDiv.length === 1) storedMulOrDiv.pop();
+        if (storedOperators[index + 1] === openParenthesis) {
+          indexOfHaveOpBeforeParen.shift();
+          storedValueForTotal.push([MULTIPLICATION, value]);
+        }
         storedOperators.splice(index, 1);
-      } else {
-        storedValueBeforeParen.push([operator, accumulator]);
-        storedOperators.splice(index, 1);
+        return accumulator = isLastIndex ? totalValue(storedValueForTotal, value) : value;
       };
-      return accumulator = value;
-    };
+    }
     
     const newValue = operator === MULTIPLICATION ? storedMulOrDiv[0] * value : storedMulOrDiv[0] / value;
 
-    if (isNextOperatorMultiOrDiv({operator: storedOperators[index]}) && storedMulOrDiv.length === 1) {
+    if (isNextOperatorMulDivOrParen({operator: storedOperators[index]}) && storedMulOrDiv.length === 1) {
       storedMulOrDiv.splice(0, 1, newValue);
       if (isNextParenthesis) {
         storedMulOrDiv.pop();
-        storedValueBeforeParen.push([MULTIPLICATION, newValue]);
+        storedValueForTotal.push([MULTIPLICATION, newValue]);
         return accumulator = 0;
       };
       return accumulator;
     };
     
-    if (storedMulOrDiv.length === 1) {
+    if (storedMulOrDiv.length === 1) { /* for next operator either addition or subtraction and stored the value from the previous index */
       const newTotalBeforeNextValue = isAddition ? accumulator + newValue : accumulator - newValue;
       storedMulOrDiv.pop();
-      return accumulator = isLastIndex && storedOperators.includes(openParenthesis) ? totalValueWithParen(storedValueBeforeParen, newTotalBeforeNextValue) : newTotalBeforeNextValue;
+      return accumulator = isLastIndex && storedOperators.includes(openParenthesis) ? totalValue(storedValueForTotal, newTotalBeforeNextValue) : newTotalBeforeNextValue;
     };
 
     if (isNextParenthesis) {
       const valueForSequence = operator === MULTIPLICATION ?  accumulator * value : accumulator / value;
-      storedValueBeforeParen.push([MULTIPLICATION, valueForSequence]);
+      storedValueForTotal.push([MULTIPLICATION, valueForSequence]);
     };
 
     if (isLastIndex && storedOperators.includes(openParenthesis)) {
       const lastValue = operations(operator, value, accumulator);
-      const lastTotalValue = totalValueWithParen(storedValueBeforeParen, lastValue);
+      const lastTotalValue = totalValue(storedValueForTotal, lastValue);
       return accumulator = lastTotalValue;
     };
 
@@ -169,5 +168,4 @@ const calculateTotal = (storedNumberSelected, storedOperators) => {
   return total;
 };
 
-export { calculateTotal };
-export { storedValueBeforeParen };
+export { calculateTotal, storedValueForTotal };
