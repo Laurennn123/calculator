@@ -56,8 +56,6 @@ const isOperatorBeforeParen = () => {
   return false;
 };
 
-
-
 const calculateTotal = (storedNumberSelected, storedOperators) => {
   const split = [...$("#text-area").text()]; 
   const indexOfParen = split.reduce((accumulator, element, index) => {
@@ -66,6 +64,7 @@ const calculateTotal = (storedNumberSelected, storedOperators) => {
   }, []);
   indexOfHaveOpBeforeParen.push(...indexOfParen);
   const storedMulOrDiv = [];
+  const isStoredOpHaveParens = storedOperators.includes(openParenthesis) ? true : false;
   let isAddition = false;
 
   const total = storedNumberSelected.reduce((accumulator, value, index) => {
@@ -156,7 +155,7 @@ const calculateTotal = (storedNumberSelected, storedOperators) => {
       storedValueForTotal.push([MULTIPLICATION, valueForSequence]);
     };
 
-    if (isLastIndex && storedOperators.includes(openParenthesis)) {
+    if (isLastIndex && isStoredOpHaveParens) {
       const lastValue = operations(operator, value, accumulator);
       const lastTotalValue = totalValue(storedValueForTotal, lastValue);
       return accumulator = lastTotalValue;
