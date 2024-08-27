@@ -25,7 +25,7 @@ const produceOpenOrCloseParenthesis = ({parenthesis, index, isNotNewParenAdded})
         if (parenthesis === OPEN_PAREN) {
             document.querySelector("#text-area").innerHTML += parenthesis;
         } else {
-            if (!$("#text-area").text().includes(parenthesis)) {
+            if ($("#text-area").html().slice(-1) !== '>') {
                 document.querySelector("#text-area").innerHTML += closeParenthesisHTML;
             } else {
                 document.querySelector("#close-paren").innerText += parenthesis;
@@ -197,6 +197,16 @@ const otherButton = (buttonClicked) => {
             if (arithmeticOperators.includes($("#text-area").text().slice(-1))) operatorThenParenIndex++;
             document.querySelector("#text-area").innerHTML += openAndCloseParenthesis;
             indexOfTotalParenthesis++;
+            break;
+        case CLOSE_PAREN:
+            if ($("#close-paren").text().length !== 0) {
+                const closeParenToAdd = $("#close-paren").text().length - 1;
+                const indexSlice = closeParenToAdd - (closeParenToAdd * 2);
+                const withoutCloseParen = $("#text-area").text().slice(0, indexSlice);
+                const textArea = $("#text-area").text();
+                closeParenToAdd === 0 ? $("#text-area").text(textArea) : $("#text-area").text(withoutCloseParen);
+                produceOpenOrCloseParenthesis({ parenthesis: CLOSE_PAREN, index: closeParenToAdd });
+            }
             break;
         default:
             break;
