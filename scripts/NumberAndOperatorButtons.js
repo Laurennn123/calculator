@@ -39,6 +39,7 @@ const isTextAreaHaveParenthesis = ({clickedButton}) => {
             } else if ((!isHaveDot && clickedButton === dot) || clickedButton !== dot) {
                 const operator = arithmeticOperators.includes(clickedButton) ? clickedButton : '×';
                 if (lastCharacter === ')') storedOperators.push(')', operator);
+                if (lastCharacter === '(' && getTextAreaWithoutCloseParen.slice(-2).charAt(0) === ')') storedOperators.push(')');
                 if (lastCharacter === ')' && !arithmeticOperators.includes(clickedButton)) document.querySelector("#text-area").innerHTML += '×';
                 document.querySelector("#text-area").innerHTML += clickedButton;
             };
@@ -89,6 +90,8 @@ const displayClickedArithOperator = (operator) => {
 
     checkIfEqualClicked(operator);
 
+    if ($("#text-area").text() === '0') storedNumberSelected.push(0);
+        
     if (arithmeticOperators.includes(lastCharacter)) {
         const currentDisplayNumber = $("#text-area").text().slice(0, -1);
         storedOperators.splice(storedOperators.length - 1, 1, operator);
