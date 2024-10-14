@@ -139,11 +139,11 @@ const calculateTotal = (storedNumberSelected, storedOperators) => {
 
     indexForRemove = [];
     plusAndMinus(storedNumberSelected, storedOperators); 
+    removingElement(indexForRemove, storedNumberSelected, storedOperators);
 
+    indexForRemove = [];
     if (!storedOperators.includes(OPEN_PAREN)) return storedNumberSelected[storedNumberSelected.length - 1];
 
-    removingElement(indexForRemove, storedNumberSelected, storedOperators);
-    
     let start = 0;
     indexOpenParen = 0;
     
@@ -242,6 +242,8 @@ const calculateTotal = (storedNumberSelected, storedOperators) => {
     }
     removingElement(indexForRemove, storedNumberSelected, storedOperators);
     
+    indexForRemove = [];
+
     start = 0;
     indexOpenParen = 0;
 
@@ -264,6 +266,10 @@ const calculateTotal = (storedNumberSelected, storedOperators) => {
 
         if (currOperator === OPEN_PAREN) newValue = operations(MULTIPLICATION, storedNumberSelected[i - 1], storedNumberSelected[i]);
         storedNumberSelected[i - 1] = newValue;
+    }
+
+    while (storedOperators.length !== 0) {
+        storedOperators.pop();
     }
 
     return storedNumberSelected[0];

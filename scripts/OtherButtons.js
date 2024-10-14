@@ -1,6 +1,6 @@
 import { storedNumberSelected, storedOperators, arithmeticOperators } from "./NumberAndOperatorButtons.js";
 import { isTextAreaHaveParenthesis, mappingStartingIndex } from "./NumberAndOperatorButtons.js";
-import { calculateTotal, storedValueForTotal } from "./SequenceOfTotal.js";
+import { calculateTotal } from "./SequenceOfTotal.js";
 
 const otherButtons = ['=', 'CE', '⌫', '.', '(', ')'];
 const [EQUAL, CLEAR_ENTRY, REMOVE, DOT, OPEN_PAREN, CLOSE_PAREN] = otherButtons;
@@ -17,7 +17,7 @@ const isTextAreaZero = () => {
 const produceOpenOrCloseParenthesis = ({parenthesis, index, isNotNewParenAdded}) => {
     while (index !== 0) {
         if (isNotNewParenAdded) {
-            const getTextAreaWithoutCloseParen = $("#text-area").text().substring(0, $("#text-area").text().length - indexOfTotalParenthesis);
+            const getTextAreaWithoutCloseParen = $("#text-area").text().substring(0, $("#text-area").text().length - $("#close-paren").text().length);
             $("#text-area").text(getTextAreaWithoutCloseParen);
             document.querySelector("#text-area").innerHTML += `${OPEN_PAREN}${closeParenthesisHTML}`;
         };
@@ -44,7 +44,6 @@ const resetValue = (lengthOfStoredNumber) => {
     while (lengthOfStoredNumber !== 0) {
         storedNumberSelected.pop();
         storedOperators.pop();
-        storedValueForTotal.pop();
         lengthOfStoredNumber--;
     };
 };
@@ -58,6 +57,8 @@ const isLastEquationHaveOperator = () => {
     return false;
 };
 
+let clickedWhileTotal;
+
 const checkIfEqualClicked = (clickedButton) => {
     const currentTextArea = $("#text-area").text();
     if (clickedButton === EQUAL) return;
@@ -68,9 +69,7 @@ const checkIfEqualClicked = (clickedButton) => {
             const currentLastEquation = $("#last-total").text();
             $("#text-area").text(currentLastEquation.slice(0, currentLastEquation.length - 1));
             $("#last-total").text("");
-            for (let index = storedValueForTotal.length; index !== 0; index--) {
-                storedValueForTotal.pop();
-            };
+            clickedWhileTotal = true;
             return;
         }
 
@@ -88,6 +87,9 @@ const checkIfEqualClicked = (clickedButton) => {
     return;
 };
 
+let oldStoreNumber;
+let oldStoredOperator;
+
 const otherButton = (buttonClicked) => {
     checkIfEqualClicked(buttonClicked);
     switch (buttonClicked) {
@@ -104,15 +106,22 @@ const otherButton = (buttonClicked) => {
             break;
         case EQUAL:
             const currentTextArea = $("#text-area").text();
-            const isOperator = currentTextArea.slice(0, currentTextArea.length - indexOfTotalParenthesis).slice(-1);
+            const isOperator = currentTextArea.slice(0, currentTextArea.length - $("#close-paren").text().length).slice(-1);
 
-            if (arithmeticOperators.includes($("#text-area").text().slice(-1)) || arithmeticOperators.includes(isOperator) || $("#text-area").text().slice(-1) === '.') {
+            if (arithmeticOperators.includes($("#text-area").text().slice(-1)) || arithmeticOperators.includes(isOperator)) {
                 $("#text-area").fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
                 break;
-            }
+            };
             
             if (!isLastEquationHaveOperator() && storedOperators.length !== 0) {
+                oldStoreNumber = storedNumberSelected.reduce((collect, number) => { collect.push(number);
+                    return collect;
+                }, [])
+                oldStoredOperator = storedOperators.reduce((collect, operator) => { collect.push(operator);
+                    return collect;
+                }, [])
                 const totalValue = calculateTotal(storedNumberSelected, storedOperators);
+                indexOfTotalParenthesis = $("#close-paren").text().length;
                 $("#last-total").text(`${currentTextArea}=`);
                 $("#text-area").text(totalValue);
                 if ($("#text-area").width() > $("#text-area-container").width()) {
@@ -130,26 +139,53 @@ const otherButton = (buttonClicked) => {
             break;
         case REMOVE:
             let indexForRemoving = 1;
+            const closeParenLength = $("#close-paren").text().length;
             
-            if ($("#text-area").text().includes(OPEN_PAREN)) indexForRemoving = indexOfTotalParenthesis + 1;
+            if ($("#text-area").text().includes(OPEN_PAREN)) {
+                indexForRemoving = closeParenLength === 0 ? indexOfTotalParenthesis + 1 : $("#close-paren").text().length + 1;
+            }
             
             const removedChar = indexOfTotalParenthesis === 0 ? $("#text-area").text().slice(-1) : $("#text-area").text().slice(-indexForRemoving).slice(0, 1);
             const previousTextArea = $("#text-area").text().substring(0, $("#text-area").text().length - indexForRemoving);
-            const isLastCharOpenParen = $("#text-area").text().substring(0, $("#text-area").text().length - indexOfTotalParenthesis).slice(-1) === OPEN_PAREN;
+            const isLastCharOpenParen = $("#text-area").text().substring(0, $("#text-area").text().length - $("#close-paren").text().length).slice(-1) === OPEN_PAREN;
             const isOnlyOneChar = $("#text-area").text().length === 1;
             const displayNewTextArea = isOnlyOneChar ? '0' : previousTextArea;
             
-            if (removedChar === OPEN_PAREN && arithmeticOperators.includes(previousTextArea.slice(-1))) operatorThenParenIndex--;
+            if (removedChar === OPEN_PAREN && arithmeticOperators.includes(previousTextArea.slice(-1)) || (arithmeticOperators.includes(removedChar) && previousTextArea.slice(-1) === CLOSE_PAREN) || removedChar === CLOSE_PAREN) operatorThenParenIndex--;
             if (isLastCharOpenParen) indexOfTotalParenthesis--;
 
-            if (previousTextArea === "" && indexOfTotalParenthesis === 0) return $("#text-area").text('0');
+            if (previousTextArea === "" && indexOfTotalParenthesis === 0) {
+                storedNumberSelected.pop();
+                return $("#text-area").text('0');
+            };
+
             $("#text-area").text(displayNewTextArea);
 
             if(previousTextArea.includes(OPEN_PAREN)) {
-                document.querySelector("#text-area").innerHTML += closeParenthesisHTML;
-                if (indexOfTotalParenthesis >= 1) produceOpenOrCloseParenthesis({parenthesis: CLOSE_PAREN, index: indexOfTotalParenthesis - 1});
+                let parenthesisAdding = closeParenLength;
+                if (removedChar === CLOSE_PAREN) {
+                    parenthesisAdding = closeParenLength + 1
+                } else if (removedChar === OPEN_PAREN) {
+                    parenthesisAdding = closeParenLength - 1;
+                } else if (closeParenLength === 0) {
+                    parenthesisAdding = indexOfTotalParenthesis;
+                }
+                if (indexOfTotalParenthesis >= 1) produceOpenOrCloseParenthesis({parenthesis: CLOSE_PAREN, index: parenthesisAdding});
             };
             
+            if (clickedWhileTotal) {
+                oldStoredOperator.forEach((operator) => storedOperators.push(operator));
+                while (storedNumberSelected.length !== 0) {
+                    storedNumberSelected.pop();
+                };
+                oldStoreNumber.forEach((number) => storedNumberSelected.push(number));
+                if (!previousTextArea.slice(-1)) {
+                    storedNumberSelected.pop();
+                } 
+                clickedWhileTotal = false;
+                return;
+            }
+
             const indexStart = mappingStartingIndex($("#text-area").text());
             const updateValue = $("#text-area").text().slice(indexStart, previousTextArea.length);
             const isLastCharOperator = arithmeticOperators.includes(removedChar);
@@ -168,8 +204,9 @@ const otherButton = (buttonClicked) => {
             if (!updateValue.includes(OPEN_PAREN) && updateValue !== "") storedNumberSelected.splice(lastIndex, 1, parseFloat(updateValue));
             break;
         case OPEN_PAREN:
+            // bug at producing open paren after of first open paren then have close paren e.g. 3(6x2)x2
             const openParenthesis = `(`;
-            const openAndCloseParenthesis = `${openParenthesis}${closeParenthesisHTML}`;
+            const openAndCloseParenthesis = `${openParenthesis}${closeParenthesisHTML}`; // refactor this 
             const firstChar = $("#text-area").text().charAt(0);
 
             if (isTextAreaZero()) {
@@ -187,9 +224,9 @@ const otherButton = (buttonClicked) => {
 
             if ($("#text-area").text().includes(openParenthesis)) {
                 let notAddedOfNewOpenCloseParen = true;
-                const isLastCharOperator = $("#text-area").text().substring(0, $("#text-area").text().length - indexOfTotalParenthesis).slice(-1);
+                const isLastCharOperator = $("#text-area").text().substring(0, $("#text-area").text().length - $("#close-paren").text().length).slice(-1);
                 if (arithmeticOperators.includes(isLastCharOperator)) operatorThenParenIndex++;
-                produceOpenOrCloseParenthesis({parenthesis: CLOSE_PAREN, index: indexOfTotalParenthesis, isNotNewParenAdded: notAddedOfNewOpenCloseParen});
+                produceOpenOrCloseParenthesis({parenthesis: CLOSE_PAREN, index: $("#close-paren").text().length, isNotNewParenAdded: notAddedOfNewOpenCloseParen});
                 indexOfTotalParenthesis++;
                 return;
             };
@@ -206,6 +243,7 @@ const otherButton = (buttonClicked) => {
                 const textArea = $("#text-area").text();
                 closeParenToAdd === 0 ? $("#text-area").text(textArea) : $("#text-area").text(withoutCloseParen);
                 produceOpenOrCloseParenthesis({ parenthesis: CLOSE_PAREN, index: closeParenToAdd });
+                operatorThenParenIndex++;
             }
             break;
         default:
