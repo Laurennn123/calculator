@@ -15,6 +15,8 @@ const isTextAreaZero = () => {
 };
 
 const produceOpenOrCloseParenthesis = ({parenthesis, index, isNotNewParenAdded}) => {
+    const closeParenIndex = index;
+    
     while (index !== 0) {
         if (isNotNewParenAdded) {
             const getTextAreaWithoutCloseParen = $("#text-area").text().substring(0, $("#text-area").text().length - $("#close-paren").text().length);
@@ -34,6 +36,9 @@ const produceOpenOrCloseParenthesis = ({parenthesis, index, isNotNewParenAdded})
         index--;
         isNotNewParenAdded = false;
     };
+    if (indexOfTotalParenthesis >= 1 && closeParenIndex === 0 && isNotNewParenAdded !== undefined) {
+        document.querySelector("#text-area").innerHTML += `${OPEN_PAREN}${closeParenthesisHTML}`;
+    }
 };
 
 let operatorThenParenIndex = 0;
@@ -179,7 +184,7 @@ const otherButton = (buttonClicked) => {
                     storedNumberSelected.pop();
                 };
                 oldStoreNumber.forEach((number) => storedNumberSelected.push(number));
-                if (!previousTextArea.slice(-1)) {
+                if (previousTextArea.slice(-1) !== '.') {
                     storedNumberSelected.pop();
                 } 
                 clickedWhileTotal = false;
@@ -208,12 +213,14 @@ const otherButton = (buttonClicked) => {
             const openParenthesis = `(`;
             const openAndCloseParenthesis = `${openParenthesis}${closeParenthesisHTML}`; // refactor this 
             const firstChar = $("#text-area").text().charAt(0);
+            const checkTextArea = isTextAreaZero();
 
-            if (isTextAreaZero()) {
+            if (checkTextArea) {
                 indexOfTotalParenthesis++;
                 return $("#text-area").html(openAndCloseParenthesis);
             };
                
+            // if the first input is open/close paren e.g. () 
             if ($("#text-area").text().includes(openParenthesis) && firstChar === openParenthesis && storedOperators.length === 0) {
                 indexOfTotalParenthesis++;
                 $("#text-area").text('');
@@ -222,11 +229,15 @@ const otherButton = (buttonClicked) => {
                 return;
             }
 
+            // if the first input num and have open/close paren e.g 6()
             if ($("#text-area").text().includes(openParenthesis)) {
-                let notAddedOfNewOpenCloseParen = true;
-                const isLastCharOperator = $("#text-area").text().substring(0, $("#text-area").text().length - $("#close-paren").text().length).slice(-1);
+                const textAreaLength = $("#text-area").text().length;
+                const closeParenLength = $("#close-paren").text().length;
+                const isLastCharOperator = $("#text-area").text().substring(0, textAreaLength - closeParenLength).slice(-1);
+                
                 if (arithmeticOperators.includes(isLastCharOperator)) operatorThenParenIndex++;
-                produceOpenOrCloseParenthesis({parenthesis: CLOSE_PAREN, index: $("#close-paren").text().length, isNotNewParenAdded: notAddedOfNewOpenCloseParen});
+                
+                produceOpenOrCloseParenthesis({parenthesis: CLOSE_PAREN, index: closeParenLength, isNotNewParenAdded: true});
                 indexOfTotalParenthesis++;
                 return;
             };
